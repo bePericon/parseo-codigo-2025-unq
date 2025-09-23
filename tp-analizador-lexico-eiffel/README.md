@@ -1,9 +1,10 @@
 # Analizador léxico de Eiffel
 
 
-## Compilación con Flex
+## Compilación y ejecución con Flex|Bison
 ```
     flex eiffel.l 
-    gcc lex.yy.c -o executable
+    bison -d sintacticAnalizer.y
+    gcc -o executable lex.yy.c sintacticAnalizer.tab.c
     ./executable < test.e 
 ```

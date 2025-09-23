@@ -1,5 +1,8 @@
 /*** Definition Section ***/
+%option noyywrap
 %{
+#include "sintacticAnalizer.tab.h"
+
 %}
 
 IDENTIFIER [a-zA-Z][0-9_a-zA-Z]*
@@ -12,59 +15,52 @@ COMMENT \-{2}.*
 /*** Rule Section ***/
 %%
 
-"class"           {printf("%s CLASS\n", yytext); return CLASS; }
-"inherit"         {printf("%s INHERIT\n", yytext); return INHERIT; }
-"create"          {printf("%s CREATE\n", yytext); return CREATE; }
-"feature"         {printf("%s FEATURE\n", yytext); return FEATURE; }
-"main"            {printf("%s MAIN\n", yytext); return MAIN; }
-"do"              {printf("%s DO\n", yytext); return DO; }
-"from"            {printf("%s FROM\n", yytext); return FROM; }
-"until"           {printf("%s UNTIL\n", yytext); return UNTIL; }
-"loop"            {printf("%s LOOP\n", yytext); return LOOP; }
-"end"             {printf("%s END\n", yytext); return END; }
-"if"              {printf("%s IF\n", yytext); return IF; }
-"then"            {printf("%s THEN\n", yytext); return THEN; }
-"else"            {printf("%s ELSE\n", yytext); return ELSE; }
-"make"            {printf("%s MAKE\n", yytext); return MAKE; }
-"print"           {printf("%s PRINT\n", yytext); return PRINT; }
-{RESERVED_TYPE}   {printf("%s RESERVED_TYPE\n", yytext); return RESERVED_TYPE; }
+"class"           {yylval.str = strdup(yytext); return CLASS; }
+"inherit"         {yylval.str = strdup(yytext); return INHERIT; }
+"create"          {yylval.str = strdup(yytext); return CREATE; }
+"feature"         {yylval.str = strdup(yytext); return FEATURE; }
+"main"            {yylval.str = strdup(yytext); return MAIN; }
+"do"              {yylval.str = strdup(yytext); return DO; }
+"from"            {yylval.str = strdup(yytext); return FROM; }
+"until"           {yylval.str = strdup(yytext); return UNTIL; }
+"loop"            {yylval.str = strdup(yytext); return LOOP; }
+"end"             {yylval.str = strdup(yytext); return END; }
+"if"              {yylval.str = strdup(yytext); return IF; }
+"then"            {yylval.str = strdup(yytext); return THEN; }
+"else"            {yylval.str = strdup(yytext); return ELSE; }
+"make"            {yylval.str = strdup(yytext); return MAKE; }
+"print"           {yylval.str = strdup(yytext); return PRINT; }
+{RESERVED_TYPE}   {yylval.str = strdup(yytext); return RESERVED_TYPE; }
 
-"+"               {printf("%s PLUS\n", yytext); return PLUS; }
-"-"               {printf("%s MINUS\n", yytext); return MINUS; }
-"*"               {printf("%s TIMES\n", yytext); return TIMES; }
-"/"               {printf("%s DIVIDE\n", yytext); return DIVIDE; }
-">"               {printf("%s GREATER\n", yytext); return GREATER; }
-"<"               {printf("%s LESS\n", yytext); return LESS; }
-"="               {printf("%s EQUAL\n", yytext); return EQUAL; }
-"!="              {printf("%s NOT_EQUAL\n", yytext); return NOT_EQUAL; }
-">="              {printf("%s GREATER_EQUAL\n", yytext); return GREATER_EQUAL; }
-"<="              {printf("%s LESS_EQUAL\n", yytext); return LESS_EQUAL; }
-"not"             {printf("%s NOT\n", yytext); return NOT; }
-"and"             {printf("%s AND\n", yytext); return AND; }
-"or"              {printf("%s OR\n", yytext); return OR; }
-"true"            {printf("%s TRUE\n", yytext); return TRUE; }
-"false"           {printf("%s FALSE\n", yytext); return FALSE; }
+"+"               {yylval.str = strdup(yytext); return PLUS; }
+"-"               {yylval.str = strdup(yytext); return MINUS; }
+"*"               {yylval.str = strdup(yytext); return TIMES; }
+"/"               {yylval.str = strdup(yytext); return DIVIDE; }
+">"               {yylval.str = strdup(yytext); return GREATER; }
+"<"               {yylval.str = strdup(yytext); return LESS; }
+"="               {yylval.str = strdup(yytext); return EQUAL; }
+"!="              {yylval.str = strdup(yytext); return NOT_EQUAL; }
+">="              {yylval.str = strdup(yytext); return GREATER_EQUAL; }
+"<="              {yylval.str = strdup(yytext); return LESS_EQUAL; }
+"not"             {yylval.str = strdup(yytext); return NOT; }
+"and"             {yylval.str = strdup(yytext); return AND; }
+"or"              {yylval.str = strdup(yytext); return OR; }
+"true"            {yylval.str = strdup(yytext); return TRUE; }
+"false"           {yylval.str = strdup(yytext); return FALSE; }
 
-":="              {printf("%s ASSIGN\n", yytext); return ASSIGN; }
-":"               {printf("%s COLON\n", yytext); return COLON; }
-","               {printf("%s COMMA\n", yytext); return COMMA; }
+":="              {yylval.str = strdup(yytext); return ASSIGN; }
+":"               {yylval.str = strdup(yytext); return COLON; }
+","               {yylval.str = strdup(yytext); return COMMA; }
 
-"("               {printf("%s PARENTHESIS_OPEN\n", yytext); return PARENTHESIS_OPEN; }
-{STRING}          {printf("%s STRING\n", yytext); return STRING; } //yylval.string = strdup(buffer);
-")"               {printf("%s PARENTHESIS_CLOSE\n", yytext); return PARENTHESIS_CLOSE; }
+"("               {yylval.str = strdup(yytext); return PARENTHESIS_OPEN; }
+{STRING}          {yylval.str = strdup(yytext); return STRING; }
+")"               {yylval.str = strdup(yytext); return PARENTHESIS_CLOSE; }
 
-{COMMENT}         {printf("%s COMMENT\n", yytext); return COMMENT; }
-{IDENTIFIER}      {printf("%s IDENTIFIER\n", yytext); return IDENTIFIER; }
-{NUMBER}          {printf("%s NUMBER\n", yytext); return NUMBER; }
+{COMMENT}         {yylval.str = strdup(yytext); return COMMENT; }
+{IDENTIFIER}      {yylval.str = strdup(yytext); return IDENTIFIER; }
+{NUMBER}          {yylval.str = strdup(yytext); return NUMBER; }
 
 [ \t\n\r]+        ;   // ignorar espacios y saltos
-.                 { printf("Carácter no reconocido: %s\n", yytext);; }
+.                 { yylval.str = strdup(yytext); return UNKNOWN; }
 
 %%
-/*** Code Section ***/
-int yywrap(){}
-int main(){
-yylex();
-      printf("\nFinished.\n");
-      return 0;
-}
