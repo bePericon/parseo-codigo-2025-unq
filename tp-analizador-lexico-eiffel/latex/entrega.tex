@@ -28,7 +28,7 @@
     breaklines=true,
     captionpos=b,
     keepspaces=true,
-    numbers=left,
+    % numbers=left,
     numbersep=5pt,
     showspaces=false,
     showstringspaces=false,
@@ -43,7 +43,7 @@
     basicstyle=\scriptsize\color{white}\ttfamily,
     morekeywords={,tabular,toprule,midrule,bottomrule},
     otherkeywords={:, \$},
-    keywordstyle=\color{green}, 
+    keywordstyle=\color{green},
     emph={username, path},
     emphstyle=\color{green},
 }
@@ -150,8 +150,8 @@ TOKEN_END                     -> end
 \section{Expresiones regulares utilizadas}
 \vspace{4mm}
 
-Se trato de obtener la mayor cantidad de tokens posibles con las expresiones a continuación
-
+Se trato de obtener la mayor cantidad de tokens posibles con las expresiones a
+continuación:
 
 \begin{lstlisting}[language=Eiffel, style=myeiffel]
 "class"           { return CLASS; }
@@ -226,5 +226,77 @@ COMMENT \-{2}.*
 \\ El punto devuelve como UNKNOWN lo que no es reconocido por el resto de expresiones
 .
 \end{lstlisting}
+
+\vspace{6mm}
+\section{Reseña del lenguaje Eiffel y su origen}
+\vspace{4mm}
+
+\subsection{Reseña del lenguaje Eiffel}
+
+Eiffel es un lenguaje de programación orientado a objetos, creado a mediados de
+los años 80 por \textbf{Bertrand Meyer}, un informático francés, mientras
+trabajaba en la empresa \textit{Interactive Software Engineering} (ISE).
+
+\noindent
+Su diseño está fuertemente ligado al ámbito académico, ya que Meyer era
+profesor e
+investigador y buscaba un lenguaje que sirviera como vehículo académico para
+difundir y aplicar los principios de \textit{programación por contrato}
+(\textit{Design by Contract}), una metodología introducida por Meyer que
+establece que cada componente de software debe definirse con
+\textbf{precondiciones, postcondiciones e invariantes}. Esto promueve la
+confiabilidad, reutilización y mantenibilidad del código.
+
+\noindent
+El nombre Eiffel hace referencia a la \textit{torre Eiffel} en París, símbolo
+de ingeniería sólida y elegante, lo cual refleja el espíritu con el que fue
+concebido: construir sistemas de software tan robustos y bien diseñados como
+una obra de ingeniería.
+
+\subsection{Principios fundamentales de Eiffel}
+
+\begin{itemize}
+    \item \textbf{Orientación a objetos pura}: todo en Eiffel es objeto,
+          incluso los tipos básicos.
+    \item \textbf{Diseño por contrato (Design by Contract, DbC)}:
+          \begin{itemize}
+              \item Una de sus mayores innovaciones.
+              \item Cada clase, método o módulo se especifica con
+                    precondiciones,
+                    postcondiciones e invariantes, como un contrato formal
+                    entre el código y sus
+                    usuarios.
+              \item Esto fomenta la confiabilidad y la verificación del
+                    software.
+          \end{itemize}
+    \item \textbf{Simplicidad y legibilidad}: la sintaxis busca ser clara y
+          cercana al lenguaje natural.
+    \item \textbf{Soporte de herencia múltiple y polimorfismo}.
+\end{itemize}
+
+\subsection{Origen universitario}
+
+Bertrand Meyer desarrolló Eiffel inicialmente en el IT Department de
+\textit{Interactive Software Engineering} (hoy Eiffel Software), pero el
+lenguaje alcanzó su madurez y estandarización en el ámbito universitario, sobre
+todo en el \textbf{ETH Zürich} (Escuela Politécnica Federal de Zúrich, Suiza),
+donde Meyer ejerció como profesor de informática desde los años 90.
+
+\noindent
+Desde entonces, Eiffel ha sido un lenguaje estrechamente ligado a la academia,
+aunque también tuvo aplicaciones en la industria en sectores donde la
+confiabilidad del software es crítica (banca, aeroespacial, defensa).
+
+\subsection{Legado}
+
+Aunque no alcanzó la popularidad masiva de Java o C++, Eiffel influyó
+enormemente en la evolución del software: el concepto de \textit{Design by
+    Contract} fue adoptado por otros lenguajes (Ada 2012, C\#, Java mediante
+librerías, Python mediante decoradores, etc.).
+
+\noindent
+Sigue siendo un referente en cursos universitarios de teoría de lenguajes y
+compiladores, justamente porque combina \textbf{rigor formal} con un
+\textbf{diseño práctico}.
 
 \end{document}
