@@ -1,13 +1,13 @@
 /*** Definition Section ***/
 %option noyywrap
 %{
-#include "sintacticAnalizer.tab.h"
+#include "syntacticAnalyzer.tab.h"
 
 %}
 
 IDENTIFIER [a-zA-Z][0-9_a-zA-Z]*
-NUMBER [0-9]*
-STRING \"[^\"]*\"
+NUMBER [0-9]+
+STR \"[^\"]*\"
 RESERVED_TYPE (INTEGER|BOOLEAN|STRING)
 COMMENT \-{2}.*
 
@@ -53,14 +53,14 @@ COMMENT \-{2}.*
 ","               {yylval.str = strdup(yytext); return COMMA; }
 
 "("               {yylval.str = strdup(yytext); return PARENTHESIS_OPEN; }
-{STRING}          {yylval.str = strdup(yytext); return STRING; }
+{STR}             {yylval.str = strdup(yytext); return STRING; }
 ")"               {yylval.str = strdup(yytext); return PARENTHESIS_CLOSE; }
 
 {COMMENT}         {yylval.str = strdup(yytext); return COMMENT; }
 {IDENTIFIER}      {yylval.str = strdup(yytext); return IDENTIFIER; }
 {NUMBER}          {yylval.str = strdup(yytext); return NUMBER; }
 
-[ \t\n\r]+        ;   // ignorar espacios y saltos
+[ \t\n\r]+        ;   // skip spaces and new lines
 .                 { yylval.str = strdup(yytext); return UNKNOWN; }
 
 %%

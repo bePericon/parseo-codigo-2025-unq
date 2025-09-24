@@ -6,15 +6,53 @@
 \usepackage{array}
 \usepackage{xcolor}
 \usepackage{graphicx}
+\usepackage{listings}
 \graphicspath{ {images/} }
 
 \usepackage[top=1in,bottom=1in,left=0.5in,right=0.5in]{geometry}
 
-\title{ 
-        \includegraphics[scale=1.3]{logo-UNQ}\\ 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{codered}{rgb}{0.6,0,0}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{myeiffel}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    emph={IDENTIFIER, RESERVED_TYPE, STRING, COMMENT, NUMBER},
+    emphstyle=\color{magenta},
+}
+
+\lstdefinestyle{DOS}{
+    backgroundcolor=\color{black},
+    basicstyle=\scriptsize\color{white}\ttfamily,
+    morekeywords={,tabular,toprule,midrule,bottomrule},
+    otherkeywords={:, \$},
+    keywordstyle=\color{green}, 
+    emph={username, path},
+    emphstyle=\color{green},
+}
+
+\title{
+    \includegraphics[scale=1.3]{logo-UNQ}\\
+    \vspace{4mm}
+    \huge{Parseo y generación de código  \\
         \vspace{4mm}
-        \huge{Parseo y generación de código  \\ 
-        \vspace{4mm} 
         Trabajo Práctico - Analizador Léxico de Eiffel} }
 \author{Jeremias Veliez - B. Emmanuel Pericon}
 \date{Septiembre 26, 2025}
@@ -33,9 +71,160 @@
 
 \vspace{4mm}
 Implementar un analizador léxico para el lenguaje Eiffel, que permita reconocer
-correctamente los tokens básicos de un programa escrito en dicho lenguaje. 
-El analizador se debe construir utilizando las herramientas Flex (generador de analizadores
-léxicos) y Bison (generador de analizadores sintácticos), aunque en esta etapa del trabajo
+correctamente los tokens básicos de un programa escrito en dicho lenguaje.
+El analizador se debe construir utilizando las herramientas Flex (generador de
+analizadores
+léxicos) y Bison (generador de analizadores sintácticos), aunque en esta etapa
+del trabajo
 sólo se requerirá implementar la parte léxica.
+
+\vspace{6mm}
+\section{Diseño y uso del analizador}
+\vspace{4mm}
+
+En este analizador tenemos dos archivos importantes, que son:
+
+\begin{itemize}
+    \item Por un lado el \textbf{eiffel.l}, que contiene la definición de
+          las
+          expresiones regulares de los tokens, directamente relacionado con
+          \textbf{Flex}.
+    \item Y por otro, el archivo \textbf{syntacticAnalyzer.y}, utilizado
+          por
+          \textbf{Bison} para coordinar la lectura de tokens y dar una
+          salida entendible.
+\end{itemize}
+
+\noindent
+Para esta entrega vamos a centrarnos en el primer archivo ya que el segundo
+solo toma directamente los tokens y los devuelve.
+
+\vspace{4mm}
+\noindent
+Necesitamos realizar una compilación de los archivos de la siguiente manera:
+
+\begin{lstlisting}[style=DOS]
+username:path$  flex eiffel.l
+username:path$  bison -d syntacticAnalyzer.y
+username:path$  gcc -o executable lex.yy.c syntacticAnalyzer.tab.c
+\end{lstlisting}
+
+\vspace{4mm}
+\noindent
+Por ejemplo, para el siguiente codigo en el archivo \textbf{tests/test.e}:
+
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+class HELLO_WORLD
+create
+    make
+feature
+    make
+        do
+            print ("Hola,utilizo Eiffel!%N")
+        end
+end
+\end{lstlisting}
+
+\vspace{4mm}
+\noindent
+A la hora de ejecutarse se realiza y ve de esta manera:
+
+\begin{lstlisting}[style=DOS]
+username:path$  ./executable  < tests/test.e 
+TOKEN_CLASS                   -> class
+TOKEN_IDENTIFIER              -> HELLO_WORLD
+TOKEN_CREATE                  -> create
+TOKEN_MAKE                    -> make
+TOKEN_FEATURE                 -> feature
+TOKEN_MAKE                    -> make
+TOKEN_DO                      -> do
+TOKEN_PRINT                   -> print
+TOKEN_PARENTHESIS_OPEN        -> (
+TOKEN_STRING                  -> "Hola,utilizo Eiffel!%N"
+TOKEN_PARENTHESIS_CLOSE       -> )
+TOKEN_END                     -> end
+TOKEN_END                     -> end
+\end{lstlisting}
+
+\vspace{6mm}
+\section{Expresiones regulares utilizadas}
+\vspace{4mm}
+
+Se trato de obtener la mayor cantidad de tokens posibles con las expresiones a continuación
+
+
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+"class"           { return CLASS; }
+"inherit"         { return INHERIT; }
+"create"          { return CREATE; }
+"feature"         { return FEATURE; }
+"main"            { return MAIN; }
+"do"              { return DO; }
+"from"            { return FROM; }
+"until"           { return UNTIL; }
+"loop"            { return LOOP; }
+"end"             { return END; }
+"if"              { return IF; }
+"then"            { return THEN; }
+"else"            { return ELSE; }
+"make"            { return MAKE; }
+"print"           { return PRINT; }
+{RESERVED_TYPE}   { return RESERVED_TYPE; }
+"+"               { return PLUS; }
+"-"               { return MINUS; }
+"*"               { return TIMES; }
+"/"               { return DIVIDE; }
+">"               { return GREATER; }
+"<"               { return LESS; }
+"="               { return EQUAL; }
+"!="              { return NOT_EQUAL; }
+">="              { return GREATER_EQUAL; }
+"<="              { return LESS_EQUAL; }
+"not"             { return NOT; }
+"and"             { return AND; }
+"or"              { return OR; }
+"true"            { return TRUE; }
+"false"           { return FALSE; }
+":="              { return ASSIGN; }
+":"               { return COLON; }
+","               { return COMMA; }
+"("               { return PARENTHESIS_OPEN; }
+{STR}             { return STRING; }
+")"               { return PARENTHESIS_CLOSE; }
+{COMMENT}         { return COMMENT; }
+{IDENTIFIER}      { return IDENTIFIER; }
+{NUMBER}          { return NUMBER; }
+
+[ \t\n\r]+        ;
+.                 { return UNKNOWN; }
+\end{lstlisting}
+
+\newpage
+
+\noindent
+Algunos expresiones particulares fueron:
+
+\begin{lstlisting}[style=myeiffel]
+\\ Toda palabra con letras minusculas/mayusculas y/o guion bajo
+IDENTIFIER [a-zA-Z][0-9_a-zA-Z]*  
+
+\\ Uno o mas numeros
+NUMBER [0-9]+
+
+\\ Todo string, cualquier caracter que se encuentre entre comillas
+STR \"[^\"]*\"
+
+\\ Algunas palabras reservadas para tipos
+RESERVED_TYPE (INTEGER|BOOLEAN|STRING)
+
+\\ Los comentarios, estos comienzan con doble guion medio
+COMMENT \-{2}.*
+
+\\ Ignorar espacios y saltos de linea
+[ \t\n\r]+ 
+
+\\ El punto devuelve como UNKNOWN lo que no es reconocido por el resto de expresiones
+.
+\end{lstlisting}
 
 \end{document}
