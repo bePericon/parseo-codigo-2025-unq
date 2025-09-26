@@ -17,6 +17,10 @@
 \definecolor{codered}{rgb}{0.6,0,0}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
+\lstset{
+  escapeinside={(*}{*)},
+}
+
 \lstdefinestyle{myeiffel}{
     backgroundcolor=\color{backcolour},
     commentstyle=\color{codegreen},
@@ -54,7 +58,7 @@
     \huge{Parseo y generación de código  \\
         \vspace{4mm}
         Trabajo Práctico - Analizador Léxico de Eiffel} }
-\author{Jeremias Veliez - B. Emmanuel Pericon}
+\author{Gastón Veliez - B. Emmanuel Pericon}
 \date{Septiembre 26, 2025}
 
 \renewcommand{\contentsname}{Indice}
@@ -79,8 +83,57 @@ del trabajo
 sólo se requerirá implementar la parte léxica.
 
 \vspace{6mm}
-\section{Diseño y uso del analizador}
+\section{Diseño del analizador}
 \vspace{4mm}
+
+Para abordar el problema se modela un subconjunto del lenguaje Eiffel como una Gramática Libre de Contexto. 
+
+Una Gramática Libre de Contexto se define como:
+\[
+G = (V, \Sigma, P, S)
+\]
+donde $V$ es el conjunto de no-terminales, $\Sigma$ el conjunto de terminales (tokens), $P$ el conjunto de producciones y $S$ el símbolo inicial.
+
+\subsection{Terminales}
+Los terminales corresponden a los tokens que el analizador léxico debe reconocer:
+\begin{itemize}
+    \item Palabras reservadas: \texttt{class}, \texttt{inherit}, \texttt{feature}, \texttt{create}, \texttt{do}, \texttt{end}, \texttt{if}, \texttt{then}, \texttt{else}, \texttt{from}, \texttt{until}, \texttt{loop}, \texttt{require}, \texttt{ensure}, \texttt{true}, \texttt{false}.
+    \item Identificadores: \texttt{IDENTIFIER}.
+    \item Constantes: \texttt{NUMBER}, \texttt{REAL}, \texttt{STRING}.
+    \item Operadores y símbolos: \texttt{:=}, \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}, \texttt{=}, \texttt{/=}, \texttt{<}, \texttt{<=}, \texttt{>}, \texttt{>=}, \texttt{(}, \texttt{)}, \texttt{;}, \texttt{,}.
+\end{itemize}
+
+\subsection{Producciones}
+Un subconjunto representativo de la gramática de Eiffel puede expresarse:
+
+\begin{lstlisting}[language={}][mathescape=true]
+program       -> class_list
+class_list    -> class_decl class_list | (*$\epsilon$*)
+
+class_decl    -> 'class' IDENTIFIER feature_block 'end'
+
+feature_block -> 'feature' feature_list | (*$\epsilon$*)
+feature_list  -> feature feature_list | (*$\epsilon$*)
+
+feature       -> routine_decl ';' | attribute_decl ';'
+
+routine_decl  -> IDENTIFIER '(' params ')' ':' type 'do' stmt_list 'end'
+params        -> param_list | (*$\epsilon$*)
+param_list    -> IDENTIFIER ':' type (',' IDENTIFIER ':' type)*
+type          -> IDENTIFIER | 'BOOLEAN' | 'INTEGER'
+
+stmt_list     -> stmt stmt_list | (*$\epsilon$*)
+stmt          -> IDENTIFIER ':=' expr ';'
+               | 'if' expr 'then' stmt_list else_opt 'end'
+               | 'from' stmt_list 'until' expr 'loop' stmt_list 'end'
+               | 'print' '(' STRING ')' ';'
+
+expr          -> expr '+' term | expr '-' term | term
+term          -> term '*' factor | term '/' factor | factor
+factor        -> '(' expr ')' | NUMBER | REAL | STRING
+               | IDENTIFIER | 'True' | 'False'
+\end{lstlisting}
+
 
 En este analizador tenemos dos archivos importantes, que son:
 
@@ -96,61 +149,15 @@ En este analizador tenemos dos archivos importantes, que son:
 \end{itemize}
 
 \noindent
-Para esta entrega vamos a centrarnos en el primer archivo ya que el segundo
-solo toma directamente los tokens y los devuelve.
+Para esta entrega vamos a centrarnos en el analizador léxico generado por Flex y el analizador sintáctico generado a través de Bison.
 
 \vspace{4mm}
-\noindent
-Necesitamos realizar una compilación de los archivos de la siguiente manera:
-
-\begin{lstlisting}[style=DOS]
-username:path$  flex eiffel.l
-username:path$  bison -d syntacticAnalyzer.y
-username:path$  gcc -o executable lex.yy.c syntacticAnalyzer.tab.c
-\end{lstlisting}
-
-\vspace{4mm}
-\noindent
-Por ejemplo, para el siguiente codigo en el archivo \textbf{tests/test.e}:
-
-\begin{lstlisting}[language=Eiffel, style=myeiffel]
-class HELLO_WORLD
-create
-    make
-feature
-    make
-        do
-            print ("Hola,utilizo Eiffel!%N")
-        end
-end
-\end{lstlisting}
-
-\vspace{4mm}
-\noindent
-A la hora de ejecutarse se realiza y ve de esta manera:
-
-\begin{lstlisting}[style=DOS]
-username:path$  ./executable  < tests/test.e 
-TOKEN_CLASS                   -> class
-TOKEN_IDENTIFIER              -> HELLO_WORLD
-TOKEN_CREATE                  -> create
-TOKEN_MAKE                    -> make
-TOKEN_FEATURE                 -> feature
-TOKEN_MAKE                    -> make
-TOKEN_DO                      -> do
-TOKEN_PRINT                   -> print
-TOKEN_PARENTHESIS_OPEN        -> (
-TOKEN_STRING                  -> "Hola,utilizo Eiffel!%N"
-TOKEN_PARENTHESIS_CLOSE       -> )
-TOKEN_END                     -> end
-TOKEN_END                     -> end
-\end{lstlisting}
 
 \vspace{6mm}
-\section{Expresiones regulares utilizadas}
+\section{Diseño del Analizador Léxico}
 \vspace{4mm}
-
-Se trato de obtener la mayor cantidad de tokens posibles con las expresiones a
+El analizador con Flex se describe mediante expresiones regulares, que Flex traduce internamente en autómatas finitos determinísticos.
+Se trato de obtener la mayor cantidad de tokens posibles (extendiendo la implementación con otras carácteristicas de el lenguaje no presentes en el ejemplo) con las expresiones a
 continuación:
 
 \begin{lstlisting}[language=Eiffel, style=myeiffel]
@@ -169,6 +176,9 @@ continuación:
 "else"            { return ELSE; }
 "make"            { return MAKE; }
 "print"           { return PRINT; }
+"invariant"       { return INVARIANT; }
+"ensure"          { return ENSURE; }
+"require"         { return REQUIRE; }
 {RESERVED_TYPE}   { return RESERVED_TYPE; }
 "+"               { return PLUS; }
 "-"               { return MINUS; }
@@ -194,6 +204,7 @@ continuación:
 {COMMENT}         { return COMMENT; }
 {IDENTIFIER}      { return IDENTIFIER; }
 {NUMBER}          { return NUMBER; }
+{REAL}            { return REAL; }
 
 [ \t\n\r]+        ;
 .                 { return UNKNOWN; }
@@ -208,8 +219,14 @@ Algunos expresiones particulares fueron:
 \\ Toda palabra con letras minusculas/mayusculas y/o guion bajo
 IDENTIFIER [a-zA-Z][0-9_a-zA-Z]*  
 
-\\ Uno o mas numeros
+\\ Un numero
+DIGIT [0-9]
+
+\\ Uno o mas numeros enteros
 NUMBER [0-9]+
+
+\\Uno o mas numeros reales
+REAL ({DIGIT}+\.[0-9]*([eE][+-]?{DIGIT}+)?|{DIGIT}+[eE][+-]?{DIGIT}+)
 
 \\ Todo string, cualquier caracter que se encuentre entre comillas
 STR \"[^\"]*\"
@@ -225,6 +242,112 @@ COMMENT \-{2}.*
 
 \\ El punto devuelve como UNKNOWN lo que no es reconocido por el resto de expresiones
 .
+\end{lstlisting}
+
+\vspace{6mm}
+\section{Diseño del Analizador Sintáctico}
+El parser se implementa en Bison como un \emph{analizador sintáctico} de tipo \emph{bottom-up}, siguiendo las producciones de la Gramática. Bison genera automáticamente las tablas de análisis a partir de las reglas mostrando el tipo de token con su lexema asociado.
+
+\subsection{Reglas}
+Para este trabajo práctico Bison solo se encargará de la lectura de los tokens producido por Flex y lo traducirá a una salida fácil de entender para el usuario, mediante las siguientes reglas (se simplifica para mayor entendimiento):
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+      CLASS                         print de TOKEN_CLASS                   -> + Lexema asociado
+    | CREATE                        print de TOKEN_CREATE                  -> + Lexema asociado
+    | FEATURE                       print de TOKEN_FEATURE                 -> + Lexema asociado
+    | DO                            print de TOKEN_DO                      -> + Lexema asociado
+    | END                           print de TOKEN_END                     -> + Lexema asociado
+    | IF                            print de TOKEN_IF                      -> + Lexema asociado
+    | THEN                          print de TOKEN_THEN                    -> + Lexema asociado
+    | ELSE                          print de TOKEN_ELSE                    -> + Lexema asociado
+    | FROM                          print de TOKEN_FROM                    -> + Lexema asociado
+    | UNTIL                         print de TOKEN_UNTIL                   -> + Lexema asociado
+    | LOOP                          print de TOKEN_LOOP                    -> + Lexema asociado
+    | INHERIT                       print de TOKEN_INHERIT                 -> + Lexema asociado
+    | MAKE                          print de TOKEN_MAKE                    -> + Lexema asociado
+    | MAIN                          print de TOKEN_MAIN                    -> + Lexema asociado
+    | PRINT                         print de TOKEN_PRINT                   -> + Lexema asociado
+    | REQUIRE                       print de TOKEN_PRINT                   -> + Lexema asociado
+    | ENSURE                        print de TOKEN_PRINT                   -> + Lexema asociado
+    | INVARIANT                     print de TOKEN_PRINT                   -> + Lexema asociado
+
+    | IDENTIFIER                    print de TOKEN_IDENTIFIER              -> + Lexema asociado
+    | NUMBER                        print de TOKEN_NUMBER                  -> + Lexema asociado
+    | REAL                          print de TOKEN_REAL                    -> + Lexema asociado
+    | STRING                        print de TOKEN_STRING                  -> + Lexema asociado
+    | TRUE                          print de TOKEN_TRUE                    -> + Lexema asociado
+    | FALSE                         print de TOKEN_FALSE                   -> + Lexema asociado
+
+    | PLUS                          print de TOKEN_PLUS                    -> + Lexema asociado
+    | MINUS                         print de TOKEN_MINUS                   -> + Lexema asociado
+    | TIMES                         print de TOKEN_TIMES                   -> + Lexema asociado
+    | DIVIDE                        print de TOKEN_DIVIDE                  -> + Lexema asociado
+    | ASSIGN                        print de TOKEN_ASSIGN                  -> + Lexema asociado
+    | EQUAL                         print de TOKEN_EQUAL                   -> + Lexema asociado
+    | LESS                          print de TOKEN_LESS                    -> + Lexema asociado
+    | GREATER                       print de TOKEN_GREATER                 -> + Lexema asociado
+    | LESS_EQUAL                    print de TOKEN_LESS_EQUAL              -> + Lexema asociado
+    | GREATER_EQUAL                 print de TOKEN_GREATER_EQUAL           -> + Lexema asociado
+    | PARENTHESIS_OPEN              print de TOKEN_PARENTHESIS_OPEN        -> + Lexema asociado
+    | PARENTHESIS_CLOSE             print de TOKEN_PARENTHESIS_CLOSE       -> + Lexema asociado
+    | COLON                         print de TOKEN_SEMI                    -> + Lexema asociado
+    | COMMA                         print de TOKEN_COMMA                   -> + Lexema asociado
+    | RESERVED_TYPE                 print de TOKEN_RESERVED_TYPE           -> + Lexema asociado
+    | NOT                           print de TOKEN_NOT                     -> + Lexema asociado
+    | NOT_EQUAL                     print de TOKEN_NOT_EQUAL               -> + Lexema asociado
+    | OR                            print de TOKEN_OR                      -> + Lexema asociado
+    | AND                           print de TOKEN_AND                     -> + Lexema asociado
+    | COMMENT                       print de TOKEN_COMMENT                 -> + Lexema asociado
+
+    | UNKNOWN                       print de TOKEN_UNKNOWN                 -> + Lexema asociado
+
+\end{lstlisting}
+\vspace{6mm}
+\section{Compilación y ejecución}
+\vspace{4mm}
+
+\noindent
+Necesitamos realizar una compilación de los archivos de la siguiente manera:
+
+\begin{lstlisting}[style=DOS]
+username:path$  flex eiffel.l
+username:path$  bison -d syntacticAnalyzer.y
+username:path$  gcc -o executable lex.yy.c syntacticAnalyzer.tab.c
+\end{lstlisting}
+
+\vspace{4mm}
+\noindent
+Por ejemplo, para el siguiente codigo en el archivo \textbf{tests/test.e}:
+
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+class HELLO_WORLD
+create
+    make
+feature
+    make
+        do
+            print ("Hola,utilizo Eiffel!%N")
+        end
+end
+\end{lstlisting}
+
+\noindent
+A la hora de ejecutarse se realiza y ve de esta manera:
+
+\begin{lstlisting}[style=DOS]
+username:path$  ./executable  < tests/test.e 
+TOKEN_CLASS                   -> class
+TOKEN_IDENTIFIER              -> HELLO_WORLD
+TOKEN_CREATE                  -> create
+TOKEN_MAKE                    -> make
+TOKEN_FEATURE                 -> feature
+TOKEN_MAKE                    -> make
+TOKEN_DO                      -> do
+TOKEN_PRINT                   -> print
+TOKEN_PARENTHESIS_OPEN        -> (
+TOKEN_STRING                  -> "Hola,utilizo Eiffel!%N"
+TOKEN_PARENTHESIS_CLOSE       -> )
+TOKEN_END                     -> end
+TOKEN_END                     -> end
 \end{lstlisting}
 
 \vspace{6mm}
