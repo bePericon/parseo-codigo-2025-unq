@@ -26,15 +26,14 @@ int yyerror(const char *msg);
 
 /* --- tokens --- */
 %token <str> CLASS CREATE FEATURE DO END 
-%token <str> IF THEN ELSE FROM UNTIL LOOP PRINT MAKE
+%token <str> IF THEN ELSE FROM UNTIL LOOP PRINT
 %token <str> IDENTIFIER RESERVED_TYPE NUMBER STRING REAL TRUE FALSE
 %token <str> PLUS MINUS TIMES DIVIDE ASSIGN EQUAL LESS GREATER LESS_EQUAL GREATER_EQUAL
 %token <str> NOT NOT_EQUAL AND OR
 %token <str> PARENTHESIS_OPEN PARENTHESIS_CLOSE COLON COMMA COMMENT
 %token <str> UNKNOWN
 
-%type <TreeNode> ID
-%type <TreeNode> BLOCK FEATURE_BLOCK LIST_FEATURES PROGRAM S
+%type <TreeNode> STATEMENT_LIST BLOCK FEATURE_DEF FEATURE_LIST CLASS_DEF PROGRAM
 
 %left EQUAL LESS GREATER LESS_EQUAL GREATER_EQUAL NOT_EQUAL
 %left AND OR
@@ -44,31 +43,26 @@ int yyerror(const char *msg);
 
 %%
 
-S : PROGRAM { print_preorder($1,0); } ;
+PROGRAM: CLASS_DEF { print_preorder($1,0); } ;
 
-PROGRAM: CLASS ID LIST_FEATURES { 
-    TreeNode* input = makeNode("Class", $2, NULL);
-    TreeNode* output = makeNode("List Features", $3, NULL);
-    $$ = makeNode("Program", input, output); 
+CLASS_DEF: CLASS IDENTIFIER FEATURE_LIST END { 
+    TreeNode *class_name = makeNode($2, NULL, NULL);
+    $$ = makeNode("CLASS_DEF", class_name, $3);
 } ;
 
-LIST_FEATURES: LIST_FEATURES FEATURE_BLOCK { $$ = makeNode("List Features", $1, $2); }
-             | FEATURE_BLOCK { $$ = $1; } ;
+FEATURE_LIST:  FEATURE_DEF FEATURE_LIST { $$ = makeNode("FEATURE_LIST", $1, $2); }
+             | FEATURE_DEF { $$ = $1; } ;
 
-FEATURE_BLOCK: FEATURE MAKE BLOCK END {
-    TreeNode* input = makeNode("Make", $3, NULL);
-    TreeNode* output = makeNode($4, NULL, NULL);
-    $$ = makeNode("Feature", input, output);
+FEATURE_DEF: FEATURE IDENTIFIER BLOCK {
+    TreeNode* name = makeNode($2, NULL, NULL);
+    $$ = makeNode("FEATURE_DEF", name, $3);
 } ;
 
-BLOCK: DO BLOCK END {
-    TreeNode* input = makeNode($1, NULL, NULL);
-    TreeNode* output = makeNode($3, NULL, NULL);
-    $$ = makeNode("Block", input, output);
+BLOCK: DO STATEMENT_LIST END {
+    $$ = makeNode("BLOCK", NULL, $2);
 } ;
-     | /* EMPTY */ {$$ = NULL;} ;
 
-ID: IDENTIFIER { $$ = makeNode($1, NULL, NULL); } ;
+STATEMENT_LIST: /* EMPTY */ {$$ = NULL;} ;
 
 %%
 

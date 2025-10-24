@@ -27,7 +27,6 @@ COMMENT \-{2}.*
 "if"                    {yylval.str = strdup(yytext); return IF; }
 "then"                  {yylval.str = strdup(yytext); return THEN; }
 "else"                  {yylval.str = strdup(yytext); return ELSE; }
-"make"                  {yylval.str = strdup(yytext); return MAKE; }
 "print"                 {yylval.str = strdup(yytext); return PRINT; }
 "true"                  {yylval.str = strdup(yytext); return TRUE; }
 "false"                 {yylval.str = strdup(yytext); return FALSE; }
