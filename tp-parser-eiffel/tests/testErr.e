@@ -14,6 +14,8 @@ feature
             i = 3
          loop
             print(i)
+            else
+                print("ERROR")
             i := i + 1
          end
       end
