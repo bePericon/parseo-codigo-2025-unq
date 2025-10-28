@@ -26,7 +26,7 @@ int yyerror(const char *msg);
 }
 
 /* --- tokens --- */
-%token <str> CLASS CREATE FEATURE DO END 
+%token <str> CLASS LOCAL FEATURE DO END 
 %token <str> IF THEN ELSE FROM UNTIL LOOP PRINT
 %token <str> IDENTIFIER RESERVED_TYPE NUMBER STRING REAL TRUE FALSE
 %token <str> PLUS MINUS TIMES DIVIDE ASSIGN EQUAL LESS GREATER LESS_EQUAL GREATER_EQUAL
@@ -34,10 +34,12 @@ int yyerror(const char *msg);
 %token <str> PARENTHESIS_OPEN PARENTHESIS_CLOSE COLON COMMA COMMENT
 %token <str> UNKNOWN
 
-%type <TreeNode> PROGRAM CLASS_DEF FEATURE_LIST FEATURE_DEF BLOCK STATEMENT_LIST STATEMENT EXPR TERM FACTOR
+%type <TreeNode> PROGRAM CLASS_DEF FEATURE_LIST FEATURE_DEF BLOCK STATEMENT_LIST STATEMENT EXPR FACTOR 
+%type <TreeNode> VAR_DECL LOCAL_DECL MULT_ID ID
 
+%left OR
+%left AND
 %left EQUAL LESS GREATER LESS_EQUAL GREATER_EQUAL NOT_EQUAL
-%left AND OR
 %left PLUS MINUS
 %left TIMES DIVIDE
 %right NOT  /* negación unaria */
@@ -68,7 +70,26 @@ FEATURE_DEF
     ;
 
 BLOCK
-    : DO STATEMENT_LIST END               { $$ = makeNode("BLOCK", NULL, $2); }
+    : LOCAL_DECL DO STATEMENT_LIST END { 
+        $$ = makeNode("BLOCK", $1, $3); 
+    }
+    | DO STATEMENT_LIST END               { $$ = makeNode("BLOCK", NULL, $2); }
+    ;
+
+LOCAL_DECL
+    : LOCAL VAR_DECL { $$ = $2; }
+    ;
+
+VAR_DECL
+    : MULT_ID COLON RESERVED_TYPE {
+        TreeNode* type = makeNode($3, NULL, NULL);
+        $$ = makeNode("VAR_DECL", $1, type);
+    }
+    ;
+
+MULT_ID
+    : MULT_ID COMMA ID                    { $$ = makeNode("MULT_ID", $1, $3); }
+    | ID                                  { $$ = $1; } 
     ;
 
 STATEMENT_LIST
@@ -90,6 +111,10 @@ STATEMENT
         TreeNode* elseb = makeNode("ELSE", $6, NULL);
         TreeNode* temp = makeNode("IF", cond, thenb);
         $$ = makeNode("IF_BLOCK", temp, elseb);
+
+        // Other way:
+        // TreeNode *then_else = makeNode("THEN_ELSE", $4, $6);
+        // $$ = makeNode("IF", $2, then_else);
     }
     | FROM STATEMENT_LIST UNTIL EXPR LOOP STATEMENT_LIST END {
         TreeNode* init = makeNode("INIT", $2, NULL);
@@ -100,22 +125,19 @@ STATEMENT
     ;
 
 EXPR
-    : EXPR PLUS TERM                      { $$ = makeNode("+", $1, $3); }
-    | EXPR MINUS TERM                     { $$ = makeNode("-", $1, $3); }
-    | EXPR EQUAL TERM                     { $$ = makeNode("=", $1, $3); }
-    | EXPR NOT_EQUAL TERM                 { $$ = makeNode("/=", $1, $3); }
-    | EXPR LESS TERM                      { $$ = makeNode("<", $1, $3); }
-    | EXPR GREATER TERM                   { $$ = makeNode(">", $1, $3); }
-    | EXPR LESS_EQUAL TERM                { $$ = makeNode("<=", $1, $3); }
-    | EXPR GREATER_EQUAL TERM             { $$ = makeNode(">=", $1, $3); }
-    | EXPR AND TERM                       { $$ = makeNode("AND", $1, $3); }
-    | EXPR OR TERM                        { $$ = makeNode("OR", $1, $3); }
-    | TERM                                { $$ = $1; }
-    ;
-
-TERM
-    : TERM TIMES FACTOR                   { $$ = makeNode("*", $1, $3); }
-    | TERM DIVIDE FACTOR                  { $$ = makeNode("/", $1, $3); }
+    : EXPR PLUS EXPR                      { $$ = makeNode("+", $1, $3); }
+    | EXPR MINUS EXPR                     { $$ = makeNode("-", $1, $3); }
+    | EXPR TIMES EXPR                     { $$ = makeNode("*", $1, $3); }
+    | EXPR DIVIDE EXPR                    { $$ = makeNode("/", $1, $3); }
+    | EXPR EQUAL EXPR                     { $$ = makeNode("=", $1, $3); }
+    | EXPR NOT_EQUAL EXPR                 { $$ = makeNode("/=", $1, $3); }
+    | EXPR LESS EXPR                      { $$ = makeNode("<", $1, $3); }
+    | EXPR GREATER EXPR                   { $$ = makeNode(">", $1, $3); }
+    | EXPR LESS_EQUAL EXPR                { $$ = makeNode("<=", $1, $3); }
+    | EXPR GREATER_EQUAL EXPR             { $$ = makeNode(">=", $1, $3); }
+    | EXPR AND EXPR                       { $$ = makeNode("AND", $1, $3); }
+    | EXPR OR EXPR                        { $$ = makeNode("OR", $1, $3); }
+    | NOT EXPR                            { $$ = makeNode("NOT", $2, NULL); }
     | FACTOR                              { $$ = $1; }
     ;
 
@@ -125,9 +147,14 @@ FACTOR
     | REAL                                { $$ = makeNode($1, NULL, NULL); }
     | TRUE                                { $$ = makeNode("True", NULL, NULL); }
     | FALSE                               { $$ = makeNode("False", NULL, NULL); }
-    | IDENTIFIER                          { $$ = makeNode($1, NULL, NULL); }
-    | PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE { $$ = $2; }
-    | NOT FACTOR                          { $$ = makeNode("NOT", $2, NULL); }
+    | ID                                  { $$ = $1; }
+    | PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE { 
+        $$ = $2; 
+    }
+    ;
+
+ID
+    : IDENTIFIER { $$ = makeNode($1, NULL, NULL); }
     ;
 
 %%

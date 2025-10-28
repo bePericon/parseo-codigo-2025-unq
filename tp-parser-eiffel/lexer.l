@@ -19,7 +19,7 @@ COMMENT \-{2}.*
 /*** Rule Section ***/
 %%
 "class"                 {yylval.str = strdup(yytext); yycolumn += yyleng; return CLASS; }
-"create"                {yylval.str = strdup(yytext); yycolumn += yyleng; return CREATE; }
+"local"                 {yylval.str = strdup(yytext); yycolumn += yyleng; return LOCAL; }
 "feature"               {yylval.str = strdup(yytext); yycolumn += yyleng; return FEATURE; }
 "do"                    {yylval.str = strdup(yytext); yycolumn += yyleng; return DO; }
 "from"                  {yylval.str = strdup(yytext); yycolumn += yyleng; return FROM; }
