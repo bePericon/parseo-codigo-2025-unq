@@ -2,15 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef struct TreeNode{
-    char* data;
-    struct TreeNode *left, *right;
-} TreeNode;
-
-TreeNode* makeNode(char*, TreeNode*, TreeNode*);
-void print_preorder(TreeNode*, int); 
-void delTree(TreeNode*);
+#include "ast.h"  
 
 extern int yylex();
 extern int yylineno;
@@ -22,10 +14,9 @@ int yyerror(const char *msg);
 
 %union {
     char *str;
-    struct TreeNode* TreeNode;
+    struct AST* ast;
 }
 
-/* --- tokens --- */
 %token <str> CLASS LOCAL FEATURE DO END 
 %token <str> IF THEN ELSE FROM UNTIL LOOP PRINT
 %token <str> IDENTIFIER RESERVED_TYPE NUMBER STRING REAL TRUE FALSE
@@ -34,8 +25,8 @@ int yyerror(const char *msg);
 %token <str> PARENTHESIS_OPEN PARENTHESIS_CLOSE COLON COMMA COMMENT
 %token <str> UNKNOWN
 
-%type <TreeNode> PROGRAM CLASS_DEF FEATURE_LIST FEATURE_DEF BLOCK STATEMENT_LIST STATEMENT EXPR FACTOR 
-%type <TreeNode> VAR_DECL LOCAL_DECL MULT_ID ID
+%type <ast> PROGRAM CLASS_DEF FEATURE_LIST FEATURE_DEF BLOCK STATEMENT_LIST STATEMENT EXPR FACTOR 
+%type <ast> VAR_DECL LOCAL_DECL MULT_ID ID
 
 %left OR
 %left AND
@@ -47,33 +38,35 @@ int yyerror(const char *msg);
 %%
 
 PROGRAM
-    : CLASS_DEF                           { print_preorder($1, 0); }
+    : CLASS_DEF { 
+        ast_set_root($1); 
+        printf("\n Árbol sintáctico construido con éxito.\n\n");
+        ast_print($1, 0);
+    }
     ;
 
 CLASS_DEF
-    : CLASS IDENTIFIER FEATURE_LIST END   {
-        TreeNode* cname = makeNode($2, NULL, NULL);
-        $$ = makeNode("CLASS_DEF", cname, $3);
+    : CLASS IDENTIFIER FEATURE_LIST END {
+        AST *class_name = ast_new_var($2);
+        $$ = ast_new_node(N_CLASS, "CLASS_DEF", class_name, $3);
     }
     ;
 
 FEATURE_LIST
-    : FEATURE_DEF FEATURE_LIST            { $$ = makeNode("FEATURE_LIST", $1, $2); }
-    | FEATURE_DEF                         { $$ = $1; }
+    : FEATURE_DEF FEATURE_LIST  { $$ = ast_new_node(N_SEQ, "FEATURE_LIST", $1, $2); }
+    | FEATURE_DEF               { $$ = $1; }
     ;
 
 FEATURE_DEF
-    : FEATURE IDENTIFIER BLOCK            {
-        TreeNode* fname = makeNode($2, NULL, NULL);
-        $$ = makeNode("FEATURE_DEF", fname, $3);
+    : FEATURE IDENTIFIER BLOCK {
+        AST *fname = ast_new_var($2);
+        $$ = ast_new_node(N_FEATURE, "FEATURE_DEF", fname, $3);
     }
     ;
 
 BLOCK
-    : LOCAL_DECL DO STATEMENT_LIST END { 
-        $$ = makeNode("BLOCK", $1, $3); 
-    }
-    | DO STATEMENT_LIST END               { $$ = makeNode("BLOCK", NULL, $2); }
+    : LOCAL_DECL DO STATEMENT_LIST END { $$ = ast_new_node(N_BLOCK, "BLOCK", $1, $3); }
+    | DO STATEMENT_LIST END            { $$ = ast_new_node(N_BLOCK, "BLOCK", NULL, $2); }
     ;
 
 LOCAL_DECL
@@ -82,116 +75,91 @@ LOCAL_DECL
 
 VAR_DECL
     : MULT_ID COLON RESERVED_TYPE {
-        TreeNode* type = makeNode($3, NULL, NULL);
-        $$ = makeNode("VAR_DECL", $1, type);
+        AST *type = ast_new_var($3);
+        $$ = ast_new_node(N_VARDECL, "VAR_DECL", $1, type);
     }
     ;
 
 MULT_ID
-    : MULT_ID COMMA ID                    { $$ = makeNode("MULT_ID", $1, $3); }
-    | ID                                  { $$ = $1; } 
+    : MULT_ID COMMA ID   { $$ = ast_new_node(N_SEQ, "MULT_ID", $1, $3); }
+    | ID                 { $$ = $1; } 
     ;
 
 STATEMENT_LIST
-    : STATEMENT STATEMENT_LIST            { $$ = makeNode("STATEMENT_LIST", $1, $2); }
-    | STATEMENT                           { $$ = $1; }
+    : STATEMENT STATEMENT_LIST  { $$ = ast_new_node(N_SEQ, "STATEMENT_LIST", $1, $2); }
+    | STATEMENT                 { $$ = $1; }
     ;
 
 STATEMENT
-    : IDENTIFIER ASSIGN EXPR              { 
-        TreeNode* id = makeNode($1, NULL, NULL);
-        $$ = makeNode("ASSIGN", id, $3);
+    : IDENTIFIER ASSIGN EXPR {
+        AST *var = ast_new_var($1);
+        $$ = ast_new_node(N_ASSIGN, ":=", var, $3);
     }
     | PRINT PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE { 
-        $$ = makeNode("PRINT", $3, NULL);
+        $$ = ast_new_node(N_PRINT, "PRINT", $3, NULL);
     }
     | IF EXPR THEN STATEMENT_LIST ELSE STATEMENT_LIST END {
-        TreeNode* cond = makeNode("COND", $2, NULL);
-        TreeNode* thenb = makeNode("THEN", $4, NULL);
-        TreeNode* elseb = makeNode("ELSE", $6, NULL);
-        TreeNode* temp = makeNode("IF", cond, thenb);
-        $$ = makeNode("IF_BLOCK", temp, elseb);
-
-        // Other way:
-        // TreeNode *then_else = makeNode("THEN_ELSE", $4, $6);
-        // $$ = makeNode("IF", $2, then_else);
+        AST *cond = ast_new_node(N_COND, "COND", $2, NULL);
+        AST *thenb = ast_new_node(N_SEQ, "THEN", $4, NULL);
+        AST *elseb = ast_new_node(N_SEQ, "ELSE", $6, NULL);
+        AST *temp = ast_new_node(N_IF, "IF", cond, thenb);
+        $$ = ast_new_node(N_IF_BLOCK, "IF_BLOCK", temp, elseb);
     }
     | FROM STATEMENT_LIST UNTIL EXPR LOOP STATEMENT_LIST END {
-        TreeNode* init = makeNode("INIT", $2, NULL);
-        TreeNode* cond = makeNode("COND", $4, NULL);
-        TreeNode* body = makeNode("BODY", $6, NULL);
-        $$ = makeNode("LOOP_BLOCK", init, makeNode("UNTIL", cond, body));
+        AST *init = ast_new_node(N_INIT, "INIT", $2, NULL);
+        AST *cond = ast_new_node(N_COND, "COND", $4, NULL);
+        AST *body = ast_new_node(N_BODY, "BODY", $6, NULL);
+        $$ = ast_new_node(N_LOOP, "LOOP_BLOCK", init, ast_new_node(N_UNTIL, "UNTIL", cond, body));
     }
     ;
 
 EXPR
-    : EXPR PLUS EXPR                      { $$ = makeNode("+", $1, $3); }
-    | EXPR MINUS EXPR                     { $$ = makeNode("-", $1, $3); }
-    | EXPR TIMES EXPR                     { $$ = makeNode("*", $1, $3); }
-    | EXPR DIVIDE EXPR                    { $$ = makeNode("/", $1, $3); }
-    | EXPR EQUAL EXPR                     { $$ = makeNode("=", $1, $3); }
-    | EXPR NOT_EQUAL EXPR                 { $$ = makeNode("/=", $1, $3); }
-    | EXPR LESS EXPR                      { $$ = makeNode("<", $1, $3); }
-    | EXPR GREATER EXPR                   { $$ = makeNode(">", $1, $3); }
-    | EXPR LESS_EQUAL EXPR                { $$ = makeNode("<=", $1, $3); }
-    | EXPR GREATER_EQUAL EXPR             { $$ = makeNode(">=", $1, $3); }
-    | EXPR AND EXPR                       { $$ = makeNode("AND", $1, $3); }
-    | EXPR OR EXPR                        { $$ = makeNode("OR", $1, $3); }
-    | NOT EXPR                            { $$ = makeNode("NOT", $2, NULL); }
-    | FACTOR                              { $$ = $1; }
+    : EXPR PLUS EXPR          { $$ = ast_new_node(N_BINOP, "+", $1, $3); }
+    | EXPR MINUS EXPR         { $$ = ast_new_node(N_BINOP, "-", $1, $3); }
+    | EXPR TIMES EXPR         { $$ = ast_new_node(N_BINOP, "*", $1, $3); }
+    | EXPR DIVIDE EXPR        { $$ = ast_new_node(N_BINOP, "/", $1, $3); }
+    | EXPR EQUAL EXPR         { $$ = ast_new_node(N_BINOP, "=", $1, $3); }
+    | EXPR NOT_EQUAL EXPR     { $$ = ast_new_node(N_BINOP, "/=", $1, $3); }
+    | EXPR LESS EXPR          { $$ = ast_new_node(N_BINOP, "<", $1, $3); }
+    | EXPR GREATER EXPR       { $$ = ast_new_node(N_BINOP, ">", $1, $3); }
+    | EXPR LESS_EQUAL EXPR    { $$ = ast_new_node(N_BINOP, "<=", $1, $3); }
+    | EXPR GREATER_EQUAL EXPR { $$ = ast_new_node(N_BINOP, ">=", $1, $3); }
+    | EXPR AND EXPR           { $$ = ast_new_node(N_BINOP, "AND", $1, $3); }
+    | EXPR OR EXPR            { $$ = ast_new_node(N_BINOP, "OR", $1, $3); }
+    | NOT EXPR                { $$ = ast_new_node(N_UNARYOP, "NOT", $2, NULL); }
+    | FACTOR                  { $$ = $1; }
     ;
 
 FACTOR
-    : NUMBER                              { $$ = makeNode($1, NULL, NULL); }
-    | STRING                              { $$ = makeNode($1, NULL, NULL); }
-    | REAL                                { $$ = makeNode($1, NULL, NULL); }
-    | TRUE                                { $$ = makeNode("True", NULL, NULL); }
-    | FALSE                               { $$ = makeNode("False", NULL, NULL); }
-    | ID                                  { $$ = $1; }
-    | PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE { 
-        $$ = $2; 
-    }
+    : NUMBER  { $$ = ast_new_int(atol($1)); }
+    | STRING  { $$ = ast_new_string($1); }
+    | REAL    { $$ = ast_new_real(atof($1)); }
+    | TRUE    { $$ = ast_new_bool(1); }
+    | FALSE   { $$ = ast_new_bool(0); }
+    | ID      { $$ = $1; }
+    | PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE { $$ = $2; }
     ;
 
 ID
-    : IDENTIFIER { $$ = makeNode($1, NULL, NULL); }
+    : IDENTIFIER { $$ = ast_new_var($1); }
     ;
 
 %%
 
 int main(void) {
-    return yyparse();
+    int result = yyparse();
+    if (result == 0) {
+        AST *root = ast_get_root();
+        printf("\n\n=== AST final ===\n");
+        ast_print(root, 0);
+    }
+    return result;
 }
 
 int yyerror(const char *msg) {
     fflush(stdout);
     fprintf(stderr, "\n Error de sintaxis: %s\n", msg);
     fprintf(stderr, "   Línea: %d, Columna: %d\n", yylineno, yycolumn);
-    fprintf(stderr, "Token inesperado: '%s'\n", yytext);
+    fprintf(stderr, "   Token inesperado: '%s'\n", yytext);
     return 1;
-}
-
-TreeNode* makeNode(char* token, TreeNode* left, TreeNode* right){
-    TreeNode* n = (TreeNode*)malloc(sizeof(TreeNode));
-    if(!n){ perror("malloc"); exit(1); }
-    n->data = strdup(token);
-    n->left = left;
-    n->right = right;
-    return n;
-}
-
-void print_preorder(TreeNode* t, int indent){
-    if(!t) return;
-    for(int i=0;i<indent;i++) printf("|  ");
-    printf("-> %s\n", t->data);
-    print_preorder(t->left, indent+1);
-    print_preorder(t->right, indent+1);
-}
-
-void delTree(TreeNode* t){
-    if(!t) return;
-    delTree(t->left);
-    delTree(t->right);
-    free(t->data);
-    free(t);
 }
