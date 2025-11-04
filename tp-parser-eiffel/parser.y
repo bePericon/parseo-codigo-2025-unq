@@ -41,7 +41,7 @@ PROGRAM
     : CLASS_DEF { 
         ast_set_root($1); 
         printf("\n Árbol sintáctico construido con éxito.\n\n");
-        ast_print($1, 0);
+        // ast_print($1, 0);
     }
     ;
 
@@ -146,15 +146,15 @@ ID
 
 %%
 
-int main(void) {
+/* int main(void) {
     int result = yyparse();
     if (result == 0) {
         AST *root = ast_get_root();
-        printf("\n\n=== AST final ===\n");
         ast_print(root, 0);
+        printf("\n\n=== AST final ===\n");
     }
     return result;
-}
+} */
 
 int yyerror(const char *msg) {
     fflush(stdout);

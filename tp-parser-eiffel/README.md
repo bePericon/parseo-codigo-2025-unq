@@ -5,6 +5,6 @@
 ```
     flex lexer.l 
     bison -d parser.y
-    gcc -o executable lex.yy.c parser.tab.c
+    gcc -o executable lex.yy.c parser.tab.c ast.c symtab.c interpreter.c
     ./executable < test.e 
 ```
