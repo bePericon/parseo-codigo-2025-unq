@@ -1,5 +1,5 @@
 /*** Definition Section ***/
-%option noyywrap
+%option noyywrap yylineno
 %{
 #include "parser.tab.h"
 #include <string.h>

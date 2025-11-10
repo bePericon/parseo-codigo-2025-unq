@@ -44,7 +44,8 @@ AST *ast_new_bool(int b) {
 
 AST *ast_new_var(const char *name) {
     AST *n = ast_new_node(N_VAR, "VAR", NULL, NULL);
-    n->value.sval = strdup(name);
+    n->value.sval = strdup(name ? name : "");
+    return n;
     return n;
 }
 

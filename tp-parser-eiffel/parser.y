@@ -9,6 +9,8 @@ extern int yylineno;
 extern int yycolumn;
 extern char *yytext;
 
+AST *root = NULL;
+
 int yyerror(const char *msg);
 %}
 
@@ -39,16 +41,14 @@ int yyerror(const char *msg);
 
 PROGRAM
     : CLASS_DEF { 
-        ast_set_root($1); 
+        root = $1;
         printf("\n Árbol sintáctico construido con éxito.\n\n");
-        // ast_print($1, 0);
     }
     ;
 
 CLASS_DEF
     : CLASS IDENTIFIER FEATURE_LIST END {
-        AST *class_name = ast_new_var($2);
-        $$ = ast_new_node(N_CLASS, "CLASS_DEF", class_name, $3);
+        $$ = ast_new_node(N_CLASS, (char*)$2, $3, NULL);
     }
     ;
 
@@ -59,8 +59,7 @@ FEATURE_LIST
 
 FEATURE_DEF
     : FEATURE IDENTIFIER BLOCK {
-        AST *fname = ast_new_var($2);
-        $$ = ast_new_node(N_FEATURE, "FEATURE_DEF", fname, $3);
+        $$ = ast_new_node(N_FEATURE, (char*)$2,$3,NULL);
     }
     ;
 

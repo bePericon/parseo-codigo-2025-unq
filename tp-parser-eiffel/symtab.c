@@ -12,8 +12,8 @@ void print_value(Value v) {
         case CHAR_T:
             printf("Tipo: CHAR, Valor: '%c'", v.value.char_val);
             break;
-        case PTR_T:
-            printf("Tipo: PTR, Valor: %p", v.value.ptr_val);
+        case STR_T:
+            printf("Tipo: STR, Valor: %p", v.value.str_val);
             break;
         default:
             printf("Tipo: DESCONOCIDO");

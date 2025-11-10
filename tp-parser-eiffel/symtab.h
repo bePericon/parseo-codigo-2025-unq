@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum { INT_T, BOOL_T, CHAR_T, PTR_T } ValueType;
+typedef enum { INT_T, BOOL_T, CHAR_T, STR_T } ValueType;
 
 typedef struct {
     ValueType type;
@@ -12,7 +12,7 @@ typedef struct {
         int int_val;       
         int bool_val;      
         char char_val;     
-        void* ptr_val;     
+        void* str_val;     
     } value;
 } Value;
 
