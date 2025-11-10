@@ -20,10 +20,16 @@ Value evaluate_ast(AST *node, Environment *env) {
         case N_CLASS:
         case N_FEATURE:
         case N_BLOCK:
-        case N_SEQ:
+        case N_SEQ: {
             evaluate_ast(node->left, env);
-            evaluate_ast(node->right, env);
-            break;
+            if (node->right)
+                evaluate_ast(node->right, env);
+            Value v;
+            v.type = INT_T;
+            v.value.int_val = 0;
+            return v;
+        }
+
 
         case N_ASSIGN: {
             Value val = evaluate_ast(node->right, env);
@@ -110,24 +116,42 @@ Value evaluate_ast(AST *node, Environment *env) {
         }
 
         case N_IF_BLOCK: {
-            Value cond = evaluate_ast(node->left->left, env);
-            if (cond.value.bool_val)
-                evaluate_ast(node->left->right, env);
-            else
-                evaluate_ast(node->right, env); 
-            break;
+            AST *ifNode = node->left;
+            AST *elseNode = node->right;
+
+            AST *condNode = ifNode->left;
+            Value condVal = evaluate_ast(condNode->left, env);
+
+            if (condVal.value.int_val != 0 || condVal.value.bool_val) {
+                evaluate_ast(ifNode->right, env);
+            } else if (elseNode) {
+                evaluate_ast(elseNode->left, env);
+            }
+
+            return condVal;
         }
+
 
         case N_LOOP: {
-            evaluate_ast(node->left, env); 
-            AST *until_node = node->right; 
-            AST *cond = until_node->left;  
-            AST *body = until_node->right;
+            AST *initNode = node->left;
+            AST *untilNode = node->right;
+            AST *condNode = untilNode->left;
+            AST *bodyNode = untilNode->right;
 
-            while (!evaluate_ast(cond, env).value.bool_val)
-                evaluate_ast(body, env);
-            break;
+            evaluate_ast(initNode, env);
+
+            while (1) {
+                Value condVal = evaluate_ast(condNode->left, env);
+                if (condVal.value.int_val != 0 || condVal.value.bool_val) break;
+                evaluate_ast(bodyNode->left, env);
+            }
+
+            Value v;
+            v.type = INT_T;
+            v.value.int_val = 0;
+            return v;
         }
+
 
         default:
             break;
