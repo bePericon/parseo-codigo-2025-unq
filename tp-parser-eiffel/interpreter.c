@@ -36,8 +36,11 @@ Value evaluate_ast(AST *node, Environment *env) {
             Value *existing = env_lookup_variable(env, node->left->value.sval);
             if (existing)
                 env_update_variable(env, node->left->value.sval, val);
-            else
-                env_add_variable(env, node->left->value.sval, val);
+            else{
+                fprintf(stderr, "\n Runtime/Semantic error: variable '%s' not declared (line %d)\n", node->left->value.sval, yylineno);
+                // env_add_variable(env, node->left->value.sval, val);
+            }
+
             result = val;
             return val;
         }
@@ -47,7 +50,7 @@ Value evaluate_ast(AST *node, Environment *env) {
             if (pv) {
                 return *pv;
             } else {
-                fprintf(stderr, "No se pudo encontrar la variable '%s' en el environment.\n", node->value.sval);
+                // fprintf(stderr, "No se pudo encontrar la variable '%s' en el environment.\n", node->value.sval);
                 Value v;
                 v.type = INT_T;
                 v.value.int_val = 0;
@@ -105,13 +108,14 @@ Value evaluate_ast(AST *node, Environment *env) {
 
         case N_STRING:
             result.type = STR_T;
-            result.value.str_val = strdup(node->name);
+            result.value.str_val = strdup(node->value.sval);
             break;
 
         case N_PRINT: {
             Value val = evaluate_ast(node->left, env);
+            printf("print(value) => { ");
             print_value(val);
-            printf("\n");
+            printf(" }\n");
             return val;
         }
 
@@ -180,8 +184,8 @@ int main(void) {
         printf("\n=== Estado final del entorno ===\n");
         env_print(global_env);
         env_free(global_env);
-    } else {
+    } /* else {
         fprintf(stderr, " Error de análisis sintáctico en la línea %d.\n", yylineno);
-    }
+    } */
     return 0;
 }

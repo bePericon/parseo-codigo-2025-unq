@@ -13,7 +13,7 @@ void print_value(Value v) {
             printf("Tipo: CHAR, Valor: '%c'", v.value.char_val);
             break;
         case STR_T:
-            printf("Tipo: STR, Valor: %p", v.value.str_val);
+            printf("Tipo: STR, Valor: %s", v.value.str_val);
             break;
         default:
             printf("Tipo: DESCONOCIDO");
@@ -78,7 +78,7 @@ void env_add_variable(Environment* env, const char* name, Value value) {
     Map* current = env->variables;
     while (current != NULL) {
         if (strcmp(current->key, name) == 0) {
-            fprintf(stderr, "Advertencia: La variable '%s' ya existe en este environment.\n", name);
+            // fprintf(stderr, "Advertencia: La variable '%s' ya existe en este environment.\n", name);
             current->value = value;
             return;
         }
@@ -106,9 +106,9 @@ Value* env_lookup_variable(Environment* env, const char* name) {
         if (strcmp(current->key, name) == 0) {
             found_var = &(current->value);
 
-            fprintf(stderr, "Se encontró la variable '%s' en el environment => { ", name);
-            print_value(*found_var);
-            printf(" }\n");
+            // fprintf(stderr, "Se encontró la variable '%s' en el environment => { ", name);
+            // print_value(*found_var);
+            // printf(" }\n");
 
             return found_var;
         }
@@ -116,7 +116,7 @@ Value* env_lookup_variable(Environment* env, const char* name) {
     }
 
     if(current_env->parent == NULL) {
-        fprintf(stderr, "No se pudo encontrar la variable '%s' en el environment.\n", name);
+        // fprintf(stderr, "No se pudo encontrar la variable '%s' en el environment.\n", name);
         return NULL;
     }
 
@@ -132,11 +132,11 @@ void env_update_variable(Environment* env, const char* name, Value new_value) {
         if (strcmp(current->key, name) == 0) {
             found_var = &(current->value);
 
-            fprintf(stderr, "Se actualizó la variable '%s' en el environment => { ", name);
-            print_value(*found_var);
-            printf(" } => { ");
-            print_value(new_value);
-            printf(" }\n");
+            // fprintf(stderr, "Se actualizó la variable '%s' en el environment => { ", name);
+            // print_value(*found_var);
+            // printf(" } => { ");
+            // print_value(new_value);
+            // printf(" }\n");
             
             current->value = new_value;
             return;
@@ -145,7 +145,7 @@ void env_update_variable(Environment* env, const char* name, Value new_value) {
     }
 
     if(current_env->parent == NULL) {
-        fprintf(stderr, "No se pudo actualizar la variable '%s' en el environment.\n", name);
+        // fprintf(stderr, "No se pudo actualizar la variable '%s' en el environment.\n", name);
         return;
     }
 

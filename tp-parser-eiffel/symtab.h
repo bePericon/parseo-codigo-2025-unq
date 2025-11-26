@@ -12,7 +12,7 @@ typedef struct {
         int int_val;       
         int bool_val;      
         char char_val;     
-        void* str_val;     
+        char* str_val;     
     } value;
 } Value;
 

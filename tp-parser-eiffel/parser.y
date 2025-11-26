@@ -157,8 +157,6 @@ ID
 
 int yyerror(const char *msg) {
     fflush(stdout);
-    fprintf(stderr, "\n Error de sintaxis: %s\n", msg);
-    fprintf(stderr, "   Línea: %d, Columna: %d\n", yylineno, yycolumn);
-    fprintf(stderr, "   Token inesperado: '%s'\n", yytext);
+    fprintf(stderr, "\n Syntax error: unexpected token '%s' (line %d, column %d)\n", yytext, yylineno, yycolumn);
     return 1;
 }
