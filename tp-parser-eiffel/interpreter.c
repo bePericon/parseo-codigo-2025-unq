@@ -8,7 +8,30 @@
 extern int yylineno;
 extern AST *root;
 
+static void declare_var_list(AST *list_node, Environment *env) {
+    if (!list_node) return;
 
+    if (list_node->kind == N_SEQ) {
+        declare_var_list(list_node->left, env);
+        declare_var_list(list_node->right, env);
+
+    } else if (list_node->kind == N_VAR) {
+        const char *var_name = list_node->value.sval;
+        
+        if (env_lookup_variable(env, var_name) != NULL) {
+             fprintf(stderr, "\n Runtime/Semantic error: The variable '%s' is already declared in this scope (line %d)\n", var_name, yylineno);
+             exit(1);
+        }
+        
+        Value initial_val = (Value){ .type = INT_T, .value.int_val = 0 };
+
+        env_add_variable(env, var_name, initial_val);
+
+    } else {
+        fprintf(stderr, "\n Runtime/Semantic error: N_VARDECL found an unexpected node of type %d in the list\n", list_node->kind);
+        exit(1);
+    }
+}
 
 Value evaluate_ast(AST *node, Environment *env) {
     Value result = { .type = INT_T, .value.int_val = 0 };
@@ -27,6 +50,13 @@ Value evaluate_ast(AST *node, Environment *env) {
             Value v;
             v.type = INT_T;
             v.value.int_val = 0;
+            return v;
+        }
+
+        case N_VARDECL: {
+            declare_var_list(node->left, env);
+            
+            Value v = { .type = INT_T, .value.int_val = 0 };
             return v;
         }
 

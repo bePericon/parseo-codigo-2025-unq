@@ -1,0 +1,420 @@
+======================================================
+-> INICIANDO PRUEBAS EN CARPETA salidas
+======================================================
+------------------------------------------------------
+EJECUTANDO: salidas/00_test_default.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> VAR DECL
+        -> SEQUENCE
+          -> SEQUENCE
+            -> VAR: a
+            -> VAR: b
+          -> VAR: c
+        -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: a
+          -> INT: 10
+        -> SEQUENCE
+          -> ASSIGN (:=)
+            -> VAR: b
+            -> INT: 20
+          -> SEQUENCE
+            -> ASSIGN (:=)
+              -> VAR: c
+              -> BINOP (+)
+                -> VAR: a
+                -> VAR: b
+            -> PRINT
+              -> VAR: c
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 30 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: c -> { Tipo: INT, Valor: 30 }
+  Clave: b -> { Tipo: INT, Valor: 20 }
+  Clave: a -> { Tipo: INT, Valor: 10 }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/01_hello.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> PRINT
+        -> STRING: "Hola, mundo Eiffel!"
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: STR, Valor: "Hola, mundo Eiffel!" }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  (Este entorno está vacío)
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/02_arit.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> PRINT
+        -> BINOP (+)
+          -> INT: 1
+          -> BINOP (*)
+            -> INT: 2
+            -> INT: 3
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 7 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  (Este entorno está vacío)
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/03_vars.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> VAR DECL
+        -> SEQUENCE
+          -> VAR: x
+          -> VAR: y
+        -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: x
+          -> INT: 10
+        -> SEQUENCE
+          -> ASSIGN (:=)
+            -> VAR: y
+            -> BINOP (+)
+              -> VAR: x
+              -> INT: 5
+          -> PRINT
+            -> VAR: y
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 15 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: y -> { Tipo: INT, Valor: 15 }
+  Clave: x -> { Tipo: INT, Valor: 10 }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/04_if_else.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> VAR DECL
+        -> VAR: x
+        -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: x
+          -> INT: 4
+        -> IF_BLOCK
+          -> IF
+            -> COND
+              -> BINOP (>)
+                -> VAR: x
+                -> INT: 0
+            -> SEQUENCE
+              -> PRINT
+                -> STRING: "positivo"
+          -> SEQUENCE
+            -> PRINT
+              -> STRING: "no positivo"
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: STR, Valor: "positivo" }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: x -> { Tipo: INT, Valor: 4 }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/05_loop_until.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> VAR DECL
+        -> VAR: i
+        -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: i
+          -> INT: 0
+        -> LOOP_BLOCK
+          -> INIT
+            -> ASSIGN (:=)
+              -> VAR: i
+              -> INT: 0
+          -> UNTIL
+            -> COND
+              -> BINOP (=)
+                -> VAR: i
+                -> INT: 3
+            -> BODY
+              -> SEQUENCE
+                -> PRINT
+                  -> VAR: i
+                -> ASSIGN (:=)
+                  -> VAR: i
+                  -> BINOP (+)
+                    -> VAR: i
+                    -> INT: 1
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 0 }
+print(value) => { Tipo: INT, Valor: 1 }
+print(value) => { Tipo: INT, Valor: 2 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: i -> { Tipo: INT, Valor: 3 }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/06_fib_iter.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> VAR DECL
+        -> SEQUENCE
+          -> SEQUENCE
+            -> SEQUENCE
+              -> SEQUENCE
+                -> VAR: a
+                -> VAR: b
+              -> VAR: t
+            -> VAR: i
+          -> VAR: n
+        -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: n
+          -> INT: 6
+        -> SEQUENCE
+          -> ASSIGN (:=)
+            -> VAR: a
+            -> INT: 0
+          -> SEQUENCE
+            -> ASSIGN (:=)
+              -> VAR: b
+              -> INT: 1
+            -> LOOP_BLOCK
+              -> INIT
+                -> ASSIGN (:=)
+                  -> VAR: i
+                  -> INT: 0
+              -> UNTIL
+                -> COND
+                  -> BINOP (=)
+                    -> VAR: i
+                    -> VAR: n
+                -> BODY
+                  -> SEQUENCE
+                    -> PRINT
+                      -> VAR: a
+                    -> SEQUENCE
+                      -> ASSIGN (:=)
+                        -> VAR: t
+                        -> BINOP (+)
+                          -> VAR: a
+                          -> VAR: b
+                      -> SEQUENCE
+                        -> ASSIGN (:=)
+                          -> VAR: a
+                          -> VAR: b
+                        -> SEQUENCE
+                          -> ASSIGN (:=)
+                            -> VAR: b
+                            -> VAR: t
+                          -> ASSIGN (:=)
+                            -> VAR: i
+                            -> BINOP (+)
+                              -> VAR: i
+                              -> INT: 1
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 0 }
+print(value) => { Tipo: INT, Valor: 1 }
+print(value) => { Tipo: INT, Valor: 1 }
+print(value) => { Tipo: INT, Valor: 2 }
+print(value) => { Tipo: INT, Valor: 3 }
+print(value) => { Tipo: INT, Valor: 5 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: n -> { Tipo: INT, Valor: 6 }
+  Clave: i -> { Tipo: INT, Valor: 6 }
+  Clave: t -> { Tipo: INT, Valor: 13 }
+  Clave: b -> { Tipo: INT, Valor: 13 }
+  Clave: a -> { Tipo: INT, Valor: 8 }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/07_fact_rec (extra).e
+=== Análisis lexico y sintactico ===
+
+ Syntax error: unexpected token '(' (line 5, column 16)
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/08_strings (extra).e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> SEQUENCE
+        -> PRINT
+          -> BINOP (+)
+            -> STRING: "Hola "
+            -> STRING: "mundo"
+        -> PRINT
+          -> BINOP (+)
+            -> BINOP (+)
+              -> STRING: "número: "
+              -> STRING: " "
+            -> STRING: "42"
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 2060254752 }
+print(value) => { Tipo: INT, Valor: 942898720 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  (Este entorno está vacío)
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/09_class_attr (extra).e
+=== Análisis lexico y sintactico ===
+
+ Syntax error: unexpected token ':' (line 5, column 11)
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: salidas/10_errors.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> ASSIGN (:=)
+        -> VAR: x
+        -> INT: 5
+===========
+
+=== Ejecucion ===
+
+ Runtime/Semantic error: variable 'x' not declared (line 13)
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  (Este entorno está vacío)
+=========================
+------------------------------------------------------
+-> PRUEBAS COMPLETADAS.
