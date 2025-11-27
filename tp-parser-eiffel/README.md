@@ -1,10 +1,40 @@
 # Parser de Eiffel
 
+### Compilación y Ejecución
 
-## Compilación y ejecución con Flex|Bison
+El proyecto incluye un Makefile automatizado para facilitar la compilación y las pruebas.
+
+#### Requisitos
+
+- GCC (Compilador de C)
+- Flex y Bison
+- Make
+
+#### Comandos
+
+- Compilar todo:
+Esto genera los archivos lex.yy.c, parser.tab.c y compila el ejecutable executable.
+
 ```
-    flex lexer.l 
-    bison -d parser.y
-    gcc -o executable lex.yy.c parser.tab.c ast.c symtab.c interpreter.c
-    ./executable < test.e 
+make build
+```
+
+
+- Ejecutar un archivo específico:
+
+```
+make run FILE=examples/01_hello.e
+```
+
+- Correr pruebas:
+Este comando busca automáticamente todos los archivos .e en la carpeta examples/ y los ejecuta secuencialmente, mostrando los resultados en consola.
+
+```
+make test
+```
+
+- Limpiar:
+
+```
+make clean
 ```
