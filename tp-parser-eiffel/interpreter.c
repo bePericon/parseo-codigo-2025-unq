@@ -68,6 +68,7 @@ Value evaluate_ast(AST *node, Environment *env) {
                 env_update_variable(env, node->left->value.sval, val);
             else{
                 fprintf(stderr, "\n Runtime/Semantic error: variable '%s' not declared (line %d)\n", node->left->value.sval, yylineno);
+                exit(1);
                 // env_add_variable(env, node->left->value.sval, val);
             }
 
@@ -80,11 +81,8 @@ Value evaluate_ast(AST *node, Environment *env) {
             if (pv) {
                 return *pv;
             } else {
-                // fprintf(stderr, "No se pudo encontrar la variable '%s' en el environment.\n", node->value.sval);
-                Value v;
-                v.type = INT_T;
-                v.value.int_val = 0;
-                return v;
+                fprintf(stderr, "\n Runtime/Semantic error: variable '%s' not found (line %d)\n", node->value.sval, yylineno);
+                exit(1);
             }
         }
 
