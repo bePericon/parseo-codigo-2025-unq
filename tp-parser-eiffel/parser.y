@@ -28,7 +28,7 @@ int yyerror(const char *msg);
 %token <str> UNKNOWN
 
 %type <ast> PROGRAM CLASS_DEF FEATURE_LIST FEATURE_DEF BLOCK STATEMENT_LIST STATEMENT EXPR FACTOR 
-%type <ast> VAR_DECL LOCAL_DECL MULT_ID ID
+%type <ast> VAR_DECL VAR_DECL_LIST LOCAL_DECL MULT_ID ID
 
 %left OR
 %left AND
@@ -69,7 +69,12 @@ BLOCK
     ;
 
 LOCAL_DECL
-    : LOCAL VAR_DECL { $$ = $2; }
+    : LOCAL VAR_DECL_LIST { $$ = $2; }
+    ;
+
+VAR_DECL_LIST
+    : VAR_DECL VAR_DECL_LIST { $$ = ast_new_node(N_SEQ, "VAR_DECL_LIST", $1, $2); }
+    | VAR_DECL               { $$ = $1; }
     ;
 
 VAR_DECL
