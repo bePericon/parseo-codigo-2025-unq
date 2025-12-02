@@ -53,7 +53,7 @@ COMMENT \-{2}.*
 "("                     {yylval.str = strdup(yytext); yycolumn += yyleng; return PARENTHESIS_OPEN; }
 ")"                     {yylval.str = strdup(yytext); yycolumn += yyleng; return PARENTHESIS_CLOSE; }
 
-{COMMENT}               {yylval.str = strdup(yytext); yycolumn += yyleng; return COMMENT; }
+{COMMENT}               {} // Discard comments
 {NUMBER}                {yylval.str = strdup(yytext); yycolumn += yyleng; return NUMBER; }
 {REAL}                  {yylval.str = strdup(yytext); yycolumn += yyleng; return REAL; }
 {STR}                   {yylval.str = strdup(yytext); yycolumn += yyleng; return STRING; }
