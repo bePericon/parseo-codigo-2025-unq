@@ -1,6 +1,8 @@
 #include <string.h>
 #include "symtab.h"
 
+extern int yylineno;
+
 void print_value(Value v) {
     switch (v.type) {
         case INT_T:
@@ -146,6 +148,12 @@ void env_update_variable(Environment* env, const char* name, Value new_value) {
     while (current != NULL) {
         if (strcmp(current->key, name) == 0) {
             found_var = &(current->value);
+
+            if(new_value.type != found_var->type){
+                fprintf(stderr, "\n Runtime/Semantic error: '%s' variable cannot be assigned as an '%s' (line %d)\n", 
+                    type_string(found_var->type), type_string(new_value.type), yylineno);
+                exit(1);
+            }
 
             // fprintf(stderr, "Se actualizó la variable '%s' en el environment => { ", name);
             // print_value(*found_var);
