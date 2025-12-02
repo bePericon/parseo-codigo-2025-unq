@@ -5,6 +5,7 @@
 #include "ast.h"
 #include "symtab.h"
 #include "parser.tab.h"
+#include "runtime.h"
 extern int yylineno;
 extern AST *root;
 
@@ -91,16 +92,47 @@ Value evaluate_ast(AST *node, Environment *env) {
             Value r = evaluate_ast(node->right, env);
             result.type = INT_T;
 
-            if (strcmp(node->name, "+") == 0)
-                result.value.int_val = l.value.int_val + r.value.int_val;
+            if (strcmp(node->name, "+") == 0){
+                if(l.type == INT_T && r.type == INT_T){
+                    result.value.int_val = l.value.int_val + r.value.int_val;
+                }else if (l.type == STR_T && r.type == STR_T){
+                    int str_len_l = strlen(l.value.str_val) > 1? strlen(l.value.str_val)-1 : 0;
+                    int str_len_r = strlen(r.value.str_val) > 1? strlen(r.value.str_val)-1 : 0;
+                    int str_len = str_len_l + str_len_r;
+                    char *str = (char *)malloc(str_len + 1);
+
+                    strncpy(str, l.value.str_val, str_len_l);
+                    strncat(str, r.value.str_val +1, str_len_r);
+
+                    result.type = STR_T;
+                    result.value.str_val = str;
+                }else{
+                    throw_error_types(l.type, r.type);
+                }
+            }
             else if (strcmp(node->name, "-") == 0)
                 result.value.int_val = l.value.int_val - r.value.int_val;
             else if (strcmp(node->name, "*") == 0)
                 result.value.int_val = l.value.int_val * r.value.int_val;
             else if (strcmp(node->name, "/") == 0)
                 result.value.int_val = r.value.int_val ? l.value.int_val / r.value.int_val : 0;
-            else if (strcmp(node->name, "=") == 0)
-                result = (Value){ .type = BOOL_T, .value.bool_val = (l.value.int_val == r.value.int_val) };
+            else if (strcmp(node->name, "=") == 0){
+                if(l.type == INT_T && r.type == INT_T) {
+                    result = (Value){ .type = BOOL_T, .value.bool_val = (l.value.int_val == r.value.int_val) };
+                }else if (l.type == BOOL_T && r.type == BOOL_T){
+                    result = (Value){ .type = BOOL_T, .value.bool_val = (l.value.bool_val == r.value.bool_val) };
+                }else{
+                    throw_error_types(l.type, r.type);
+                }
+            }
+            else if (strcmp(node->name, "/=") == 0)
+                if(l.type == INT_T && r.type == INT_T) {
+                    result = (Value){ .type = BOOL_T, .value.bool_val = (l.value.int_val != r.value.int_val) };
+                }else if (l.type == BOOL_T && r.type == BOOL_T){
+                    result = (Value){ .type = BOOL_T, .value.bool_val = (l.value.bool_val != r.value.bool_val) };
+                }else{
+                    throw_error_types(l.type, r.type);
+                }
             else if (strcmp(node->name, "<") == 0)
                 result = (Value){ .type = BOOL_T, .value.bool_val = (l.value.int_val < r.value.int_val) };
             else if (strcmp(node->name, ">") == 0)
@@ -131,7 +163,7 @@ Value evaluate_ast(AST *node, Environment *env) {
 
         case N_BOOL:
             result.type = BOOL_T;
-            result.value.bool_val = (strcmp(node->name, "true") == 0);
+            result.value.bool_val = node->value.bval;
             break;
 
         case N_STRING:

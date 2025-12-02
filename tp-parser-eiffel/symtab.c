@@ -21,6 +21,21 @@ void print_value(Value v) {
     }
 }
 
+char* type_string(ValueType type) {
+    switch (type) {
+        case INT_T:
+            return "INTEGER";
+        case BOOL_T:
+            return "BOOLEAN";
+        case CHAR_T:
+            return "CHAR";
+        case STR_T:
+            return "STRING";
+        default:
+            return "DESCONOCIDO";
+    }
+}
+
 void env_print(Environment* env) {
     int env_level = 0;
     Environment* current_env = env;

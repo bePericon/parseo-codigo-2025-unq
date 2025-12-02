@@ -31,6 +31,7 @@ typedef struct Environment {
 void env_print(Environment* env);
 
 void print_value(Value value);
+char* type_string(ValueType type);
 Environment* env_create(Environment* parent);
 void env_free(Environment* env);
 void env_add_variable(Environment* env, const char* name, Value value);

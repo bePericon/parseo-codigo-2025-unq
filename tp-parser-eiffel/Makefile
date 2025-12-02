@@ -18,7 +18,7 @@ FLEX = flex
 EXECUTABLE = executable
 
 # Archivos fuente del proyecto
-SOURCE_FILES = ast.c symtab.c interpreter.c
+SOURCE_FILES = ast.c symtab.c runtime.c interpreter.c
 
 # Archivos de especificación (Flex/Bison)
 SPEC_FILES = parser.y lexer.l
