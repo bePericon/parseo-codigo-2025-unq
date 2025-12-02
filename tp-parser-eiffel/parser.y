@@ -21,7 +21,7 @@ int yyerror(const char *msg);
 
 %token <str> CLASS LOCAL FEATURE DO END 
 %token <str> IF THEN ELSE FROM UNTIL LOOP PRINT
-%token <str> IDENTIFIER RESERVED_TYPE NUMBER STRING REAL TRUE FALSE
+%token <str> IDENTIFIER RESERVED_TYPE NUMBER NEG_NUMBER STRING REAL TRUE FALSE
 %token <str> PLUS MINUS TIMES DIVIDE ASSIGN EQUAL LESS GREATER LESS_EQUAL GREATER_EQUAL
 %token <str> NOT NOT_EQUAL AND OR
 %token <str> PARENTHESIS_OPEN PARENTHESIS_CLOSE COLON COMMA
@@ -135,12 +135,13 @@ EXPR
     ;
 
 FACTOR
-    : NUMBER  { $$ = ast_new_int(atol($1)); }
-    | STRING  { $$ = ast_new_string($1); }
-    | REAL    { $$ = ast_new_real(atof($1)); }
-    | TRUE    { $$ = ast_new_bool(1); }
-    | FALSE   { $$ = ast_new_bool(0); }
-    | ID      { $$ = $1; }
+    : NUMBER        { $$ = ast_new_int(atol($1)); }
+    | NEG_NUMBER    { $$ = ast_new_int(atol($1)); }
+    | STRING        { $$ = ast_new_string($1); }
+    | REAL          { $$ = ast_new_real(atof($1)); }
+    | TRUE          { $$ = ast_new_bool(1); }
+    | FALSE         { $$ = ast_new_bool(0); }
+    | ID            { $$ = $1; }
     | PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE { $$ = $2; }
     ;
 

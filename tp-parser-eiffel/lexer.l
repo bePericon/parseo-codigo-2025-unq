@@ -10,6 +10,7 @@ int yycolumn = 1;
 DIGIT       [0-9]
 IDENTIFIER [a-zA-Z][0-9_a-zA-Z]*
 NUMBER {DIGIT}+
+NEG_NUMBER \-{1}{NUMBER}
 REAL ({DIGIT}+\.[0-9]*([eE][+-]?{DIGIT}+)?|{DIGIT}+[eE][+-]?{DIGIT}+)
 STR \"[^\"]*\"
 RESERVED_TYPE (INTEGER|BOOLEAN|STRING)
@@ -55,6 +56,7 @@ COMMENT \-{2}.*
 
 {COMMENT}               {} // Discard comments
 {NUMBER}                {yylval.str = strdup(yytext); yycolumn += yyleng; return NUMBER; }
+{NEG_NUMBER}            {yylval.str = strdup(yytext); yycolumn += yyleng; return NEG_NUMBER; }
 {REAL}                  {yylval.str = strdup(yytext); yycolumn += yyleng; return REAL; }
 {STR}                   {yylval.str = strdup(yytext); yycolumn += yyleng; return STRING; }
 
