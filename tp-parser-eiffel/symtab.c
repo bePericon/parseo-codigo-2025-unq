@@ -9,9 +9,6 @@ void print_value(Value v) {
         case BOOL_T:
             printf("Tipo: BOOL, Valor: %s", v.value.bool_val ? "true" : "false");
             break;
-        case CHAR_T:
-            printf("Tipo: CHAR, Valor: '%c'", v.value.char_val);
-            break;
         case STR_T:
             printf("Tipo: STR, Valor: %s", v.value.str_val);
             break;
@@ -27,8 +24,6 @@ char* type_string(ValueType type) {
             return "INTEGER";
         case BOOL_T:
             return "BOOLEAN";
-        case CHAR_T:
-            return "CHAR";
         case STR_T:
             return "STRING";
         default:
@@ -60,7 +55,7 @@ void env_print(Environment* env) {
         env_level++;
     }
 
-    printf("=========================\n");
+    printf("==========================\n");
 }
 
 Environment* env_create(Environment* parent) {
@@ -165,4 +160,91 @@ void env_update_variable(Environment* env, const char* name, Value new_value) {
     }
 
     return env_update_variable(current_env->parent, name, new_value);
+}
+
+
+/* ########### CLASSES MANAGEMENT ########### */ 
+
+void print_features(Function* functions) {
+    Function* current = functions;
+    printf("\n Features: [\n");
+    while (current != NULL) {
+        printf(" %s, \n", current->name);
+        current = current->next;
+    }
+    printf("]\n");
+}
+
+void global_classes_print(Class* gcls) {
+    int cls_level = 0;
+    Class* current = gcls;
+
+    while (current != NULL) {
+        printf("\n=== GLOBAL CLASSES #%d (%s) ===\n", cls_level, (current == gcls) ? "Local" : "Padre");
+        
+        Function* current_features = current->features;
+        
+        if (current_features == NULL) {
+            printf("  (Esta clase está vacía)\n");
+        } else {
+            while (current_features != NULL) {
+                printf("  Nombre: %s -> { ", current_features->name);
+                print_features(current_features);
+                printf(" }\n");
+                current_features = current_features->next;
+            }
+        }
+        
+        current = current->next;
+        cls_level++;
+    }
+
+    printf("=================================\n");
+}
+
+#define CLASS_NAME "GLOBAL_CLASSES"
+
+Class* classes_create(Class* parent) {
+    Class* class = (Class*)malloc(sizeof(Class));
+    if (!class) {
+        perror("Error de asignación de memoria para GLOBAL_CLASSES");
+        exit(EXIT_FAILURE);
+    }
+
+    class->features = NULL;
+    class->name = CLASS_NAME;
+    class->next = NULL;
+    return class;
+}
+
+void register_class(Class* parent, const char *name, AST *feature_list) {
+    Class *new_class = (Class*)malloc(sizeof(Class));
+    new_class->name = strdup(name);
+    new_class->features = NULL;
+    new_class->next = parent;
+
+    AST *current = feature_list;
+
+
+    // new_class->features = current;
+}
+
+
+Class* lookup_class(Class* cls, const char *name) {
+    Class *c = cls;
+    while (c) {
+        if (strcmp(c->name, name) == 0) return c;
+        c = c->next;
+    }
+    return NULL;
+}
+
+Function* lookup_feature(Class* cls, const char *feature_name) {
+    if (!cls) return NULL;
+    Function *f = cls->features;
+    while (f) {
+        if (strcmp(f->name, feature_name) == 0) return f;
+        f = f->next;
+    }
+    return NULL;
 }

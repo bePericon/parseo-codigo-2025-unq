@@ -27,7 +27,13 @@ typedef enum {
     N_BODY,
     N_UNTIL,
     N_PRINT,
-    N_NOOP
+    N_NOOP,
+
+    N_METADATA,
+    N_FEATURE_FUNC,
+    N_CALL,
+    N_DOT_ACCESS,
+    N_CREATE,
 } NodeKind;
 
 typedef struct AST {

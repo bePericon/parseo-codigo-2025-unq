@@ -34,6 +34,7 @@ COMMENT \-{2}.*
 "true"                  {yylval.str = strdup(yytext); yycolumn += yyleng; return TRUE; }
 "false"                 {yylval.str = strdup(yytext); yycolumn += yyleng; return FALSE; }
 {RESERVED_TYPE}         {yylval.str = strdup(yytext); yycolumn += yyleng; return RESERVED_TYPE; }
+"create"                {yylval.str = strdup(yytext); yycolumn += yyleng; return CREATE; }
 
 "+"                     {yylval.str = strdup(yytext); yycolumn += yyleng; return PLUS; }
 "-"                     {yylval.str = strdup(yytext); yycolumn += yyleng; return MINUS; }
@@ -53,6 +54,7 @@ COMMENT \-{2}.*
 ","                     {yylval.str = strdup(yytext); yycolumn += yyleng; return COMMA; }
 "("                     {yylval.str = strdup(yytext); yycolumn += yyleng; return PARENTHESIS_OPEN; }
 ")"                     {yylval.str = strdup(yytext); yycolumn += yyleng; return PARENTHESIS_CLOSE; }
+"."                     {yylval.str = strdup(yytext); yycolumn += yyleng; return DOT; }
 
 {COMMENT}               {} // Discard comments
 {NUMBER}                {yylval.str = strdup(yytext); yycolumn += yyleng; return NUMBER; }

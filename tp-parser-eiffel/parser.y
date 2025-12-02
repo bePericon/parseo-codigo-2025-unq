@@ -19,16 +19,18 @@ int yyerror(const char *msg);
     struct AST* ast;
 }
 
-%token <str> CLASS LOCAL FEATURE DO END 
+%token <str> CLASS LOCAL FEATURE DO END CREATE RESULT
 %token <str> IF THEN ELSE FROM UNTIL LOOP PRINT
 %token <str> IDENTIFIER RESERVED_TYPE NUMBER NEG_NUMBER STRING REAL TRUE FALSE
 %token <str> PLUS MINUS TIMES DIVIDE ASSIGN EQUAL LESS GREATER LESS_EQUAL GREATER_EQUAL
 %token <str> NOT NOT_EQUAL AND OR
-%token <str> PARENTHESIS_OPEN PARENTHESIS_CLOSE COLON COMMA
+%token <str> PARENTHESIS_OPEN PARENTHESIS_CLOSE COLON COMMA DOT
 %token <str> UNKNOWN
 
-%type <ast> PROGRAM CLASS_DEF FEATURE_LIST FEATURE_DEF BLOCK STATEMENT_LIST STATEMENT EXPR FACTOR 
+%type <ast> PROGRAM CLASS_DEF_LIST CLASS_DEF FEATURE_LIST FEATURE_DEF BLOCK STATEMENT_LIST STATEMENT EXPR FACTOR 
 %type <ast> VAR_DECL VAR_DECL_LIST LOCAL_DECL MULT_ID ID
+%type <ast> PARAMETERS PARAMETER PARAMETER_LIST
+%type <ast> ARGUMENTS ARGUMENT_LIST CALL_EXPR
 
 %left OR
 %left AND
@@ -40,10 +42,15 @@ int yyerror(const char *msg);
 %%
 
 PROGRAM
-    : CLASS_DEF { 
+    : CLASS_DEF_LIST { 
         root = $1;
         printf("\n Árbol sintáctico construido con éxito.\n\n");
     }
+    ;
+
+CLASS_DEF_LIST
+    : CLASS_DEF CLASS_DEF_LIST { $$ = ast_new_node(N_SEQ, "CLASS_DEF_LIST", $1, $2); }
+    | CLASS_DEF                { $$ = $1; }
     ;
 
 CLASS_DEF
@@ -58,9 +65,34 @@ FEATURE_LIST
     ;
 
 FEATURE_DEF
-    : FEATURE IDENTIFIER BLOCK {
+    : FEATURE IDENTIFIER PARAMETERS COLON RESERVED_TYPE BLOCK {
+        AST *identifier = ast_new_var($2);
+        AST *type = ast_new_var($5);
+        AST *metadata = ast_new_node(N_METADATA, "FEATURE_DEF_METADATA", $3, type);
+        AST *feature = ast_new_node(N_FEATURE, (char*)$2, metadata, $6);
+        $$ = ast_new_node(N_FEATURE_FUNC, "FEATURE_DEF", identifier, feature); 
+
+    }
+    | FEATURE IDENTIFIER BLOCK {
         $$ = ast_new_node(N_FEATURE, (char*)$2,$3,NULL);
     }
+    ;
+
+PARAMETERS
+    : PARENTHESIS_OPEN PARAMETER_LIST PARENTHESIS_CLOSE { $$ = $2; }
+    | PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = NULL; }
+    ;
+
+PARAMETER 
+    : ID COLON RESERVED_TYPE {
+        AST *type = ast_new_var($3);
+        $$ = ast_new_node(N_VARDECL, "PARAMETER", $1, type);
+    }
+    ;
+    
+PARAMETER_LIST
+    : PARAMETER COMMA PARAMETER_LIST { $$ = ast_new_node(N_SEQ, "PARAMETER_LIST", $1, $3); }
+    | PARAMETER                  { $$ = $1; }
     ;
 
 BLOCK
@@ -82,6 +114,9 @@ VAR_DECL
         AST *type = ast_new_var($3);
         $$ = ast_new_node(N_VARDECL, "VAR_DECL", $1, type);
     }
+    | ID COLON ID {
+        $$ = ast_new_node(N_VARDECL, "VAR_DECL_CLASS", $1, $3);
+    }
     ;
 
 MULT_ID
@@ -95,9 +130,14 @@ STATEMENT_LIST
     ;
 
 STATEMENT
-    : IDENTIFIER ASSIGN EXPR {
-        AST *var = ast_new_var($1);
-        $$ = ast_new_node(N_ASSIGN, ":=", var, $3);
+    : ID ASSIGN EXPR {
+        $$ = ast_new_node(N_ASSIGN, ":=", $1, $3);
+    }
+    | CALL_EXPR ASSIGN EXPR { 
+        $$ = ast_new_node(N_ASSIGN, ":=", $1, $3);
+    }
+    | CREATE ID {
+        $$ = ast_new_node(N_CREATE, "CREATE", $2, NULL);
     }
     | PRINT PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE { 
         $$ = ast_new_node(N_PRINT, "PRINT", $3, NULL);
@@ -117,8 +157,31 @@ STATEMENT
     }
     ;
 
+ARGUMENTS
+    : PARENTHESIS_OPEN ARGUMENT_LIST PARENTHESIS_CLOSE { $$ = $2; }
+    | PARENTHESIS_OPEN PARENTHESIS_CLOSE { $$ = NULL; }
+    ;
+    
+ARGUMENT_LIST
+    : EXPR COMMA ARGUMENT_LIST { $$ = ast_new_node(N_SEQ, "ARGUMENT_LIST", $1, $3); }
+    | EXPR { $$ = $1; }
+    ;
+
+CALL_EXPR
+    : ID ARGUMENTS {
+        $$ = ast_new_node(N_CALL, "CALL_EXPR", $1, $2);
+    }
+    | ID DOT ID ARGUMENTS {
+        $$ = ast_new_node(N_CALL, "DOT_CALL_EXPR", $1, ast_new_node(N_SEQ, "CALL_ARGS", $3, $4));
+    }
+    | ID DOT ID {
+        $$ = ast_new_node(N_DOT_ACCESS, "DOT_ACCESS", $1, $3);
+    }
+    ;
+
 EXPR
-    : EXPR PLUS EXPR          { $$ = ast_new_node(N_BINOP, "+", $1, $3); }
+    : CALL_EXPR               { $$ = $1; }
+    | EXPR PLUS EXPR          { $$ = ast_new_node(N_BINOP, "+", $1, $3); }
     | EXPR MINUS EXPR         { $$ = ast_new_node(N_BINOP, "-", $1, $3); }
     | EXPR TIMES EXPR         { $$ = ast_new_node(N_BINOP, "*", $1, $3); }
     | EXPR DIVIDE EXPR        { $$ = ast_new_node(N_BINOP, "/", $1, $3); }

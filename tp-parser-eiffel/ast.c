@@ -86,6 +86,11 @@ static void ast_print_rec(AST *a, int indent) {
         case N_UNTIL:        printf("-> UNTIL\n"); break;
         case N_PRINT:        printf("-> PRINT\n"); break;
         case N_NOOP:         printf("-> NOOP\n"); break;
+        case N_METADATA:     printf("-> METADATA\n"); break;
+        case N_FEATURE_FUNC: printf("-> FEATURE_FUNC\n"); break;
+        case N_CALL:         printf("-> CALL\n"); break;
+        case N_DOT_ACCESS:   printf("-> DOT_ACCESS\n"); break;
+        case N_CREATE:       printf("-> CREATE\n"); break;
         default:             printf("-> UNKNOWN NODE\n"); break;
     }
 

@@ -9,6 +9,26 @@
 extern int yylineno;
 extern AST *root;
 
+void scan_definitions(AST *node, Class* global_cls) {
+    if (!node) return;
+
+    if (node->kind == N_CLASS) {
+        Class *cls = (Class*)calloc(1, sizeof(Class));
+        cls->name = strdup(node->name);
+        cls->next = global_cls; 
+        global_cls = cls; 
+
+        AST *feat_seq = node->left;
+
+        extract_features_from_ast(cls, feat_seq); 
+        
+        return;
+    }
+
+    scan_definitions(node->left);
+    scan_definitions(node->right);
+}
+
 static void declare_var_list(AST *list_node, Environment *env) {
     if (!list_node) return;
 
@@ -34,14 +54,18 @@ static void declare_var_list(AST *list_node, Environment *env) {
     }
 }
 
-Value evaluate_ast(AST *node, Environment *env) {
+Value evaluate_ast(AST *node, Environment *env, Class *global_cls) {
     Value result = { .type = INT_T, .value.int_val = 0 };
     if (!node) return result;
 
     switch (node->kind) {
 
+        case N_CLASS: {
+            scan_definitions(node->left, global_cls);
+            if (node->right)
+                scan_definitions(node->right, global_cls);
+        }
         case N_PROGRAM:
-        case N_CLASS:
         case N_FEATURE:
         case N_BLOCK:
         case N_SEQ: {
@@ -239,11 +263,19 @@ int main(void) {
 
         printf("\n=== Ejecucion ===\n");
         Environment *global_env = env_create(NULL);
+        Class *global_classes = classes_create(NULL);
         evaluate_ast(root, global_env);
 
+        
+        
         printf("\n=== Estado final del entorno ===\n");
         env_print(global_env);
         env_free(global_env);
+
+        printf("\n=== Estado final del GLOBAL CLASSES ===\n");
+        global_classes_print(global_classes);
+        // global_classes_free(global_classes);
+
     } /* else {
         fprintf(stderr, " Error de análisis sintáctico en la línea %d.\n", yylineno);
     } */
