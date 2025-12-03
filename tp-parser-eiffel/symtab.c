@@ -11,9 +11,6 @@ void print_value(Value v) {
         case BOOL_T:
             printf("Tipo: BOOL, Valor: %s", v.value.bool_val ? "true" : "false");
             break;
-        case CHAR_T:
-            printf("Tipo: CHAR, Valor: '%c'", v.value.char_val);
-            break;
         case STR_T:
             printf("Tipo: STR, Valor: %s", v.value.str_val);
             break;
@@ -29,8 +26,6 @@ char* type_string(ValueType type) {
             return "INTEGER";
         case BOOL_T:
             return "BOOLEAN";
-        case CHAR_T:
-            return "CHAR";
         case STR_T:
             return "STRING";
         default:

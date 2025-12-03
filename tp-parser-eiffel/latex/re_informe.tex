@@ -1,0 +1,846 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{listings}
+\graphicspath{ {images/} }
+
+\usepackage[top=1in,bottom=1in,left=0.5in,right=0.5in]{geometry}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{codered}{rgb}{0.6,0,0}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    escapeinside={(*}{*)},
+}
+
+\lstdefinestyle{myeiffel}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    % numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    emph={IDENTIFIER, RESERVED_TYPE, STRING, COMMENT, NUMBER},
+    emphstyle=\color{magenta},
+}
+
+\lstdefinestyle{DOS}{
+    backgroundcolor=\color{black},
+    basicstyle=\color{white}\ttfamily,
+    morekeywords={,tabular,toprule,midrule,bottomrule},
+    otherkeywords={:, \$},
+    keywordstyle=\color{green},
+    emph={username, path},
+    emphstyle=\color{green},
+}
+
+\lstdefinestyle{CStyle}{
+    backgroundcolor=\color{lightgray!10}, % Light background
+    commentstyle=\color{green!50!black},  % Green comments
+    keywordstyle=\color{blue}\bfseries,   % Blue bold keywords
+    numberstyle=\tiny\color{gray},        % Small gray line numbers
+    stringstyle=\color{red},              % Red strings
+    basicstyle=\ttfamily\footnotesize,    % Monospace font, small size
+    breaklines=true,                      % Allow lines to break
+    showstringspaces=false,               % Don't show spaces in strings
+    language=C                            % Set default language to C
+}
+
+\title{
+    \includegraphics[scale=1.3]{logo-UNQ}\\
+    \vspace{15mm}
+    \huge{Parseo y generación de código  \\
+        \vspace{6mm}
+        Trabajo Práctico\\
+        \vspace{2mm}
+        Intérprete reducido de Eiffel} }
+\author{B. Emmanuel Pericon}
+\date{Diciembre 3, 2025}
+
+\renewcommand{\contentsname}{Indice}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Introducción}
+
+\vspace{4mm}
+A partir del analizador léxico entregado en la parte 1, para esta entrega se optó por la Opción A 
+(Intérprete directo), utilizando Flex para el análisis léxico, Bison para el análisis sintáctico y
+un entorno en C para la construcción y evaluación del Árbol de Sintaxis Abstracta (AST).
+
+\vspace{6mm}
+\section{Diseño del analizador léxico}
+\vspace{4mm}
+El analizador con Flex (\textbf{lexer.l}) se describe mediante expresiones regulares, que Flex
+traduce internamente en autómatas finitos determinísticos.
+Se trato de obtener la mayor cantidad de tokens posibles con las expresiones a
+continuación:
+
+\vspace{4mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+"class"           { return CLASS; }
+"feature"         { return FEATURE; }
+"do"              { return DO; }
+"from"            { return FROM; }
+"until"           { return UNTIL; }
+"loop"            { return LOOP; }
+"end"             { return END; }
+"if"              { return IF; }
+"then"            { return THEN; }
+"else"            { return ELSE; }
+"print"           { return PRINT; }
+{RESERVED_TYPE}   { return RESERVED_TYPE; }
+"+"               { return PLUS; }
+"-"               { return MINUS; }
+"*"               { return TIMES; }
+"/"               { return DIVIDE; }
+">"               { return GREATER; }
+"<"               { return LESS; }
+"="               { return EQUAL; }
+"!="              { return NOT_EQUAL; }
+">="              { return GREATER_EQUAL; }
+"<="              { return LESS_EQUAL; }
+"not"             { return NOT; }
+"and"             { return AND; }
+"or"              { return OR; }
+"true"            { return TRUE; }
+"false"           { return FALSE; }
+":="              { return ASSIGN; }
+":"               { return COLON; }
+","               { return COMMA; }
+"("               { return PARENTHESIS_OPEN; }
+{STR}             { return STRING; }
+")"               { return PARENTHESIS_CLOSE; }
+{COMMENT}         { return COMMENT; }
+{IDENTIFIER}      { return IDENTIFIER; }
+{NUMBER}          { return NUMBER; }
+{REAL}            { return REAL; }
+
+[ \t\n\r]+        ;
+.                 { return UNKNOWN; }
+\end{lstlisting}
+
+\newpage
+
+\noindent
+Algunos expresiones particulares fueron:
+
+\begin{lstlisting}[style=myeiffel]
+\\ Toda palabra con letras minusculas/mayusculas y/o guion bajo
+IDENTIFIER [a-zA-Z][0-9_a-zA-Z]*  
+
+\\ Un numero
+DIGIT [0-9]
+
+\\ Uno o mas numeros enteros
+NUMBER [0-9]+
+
+\\Uno o mas numeros reales
+REAL ({DIGIT}+\.[0-9]*([eE][+-]?{DIGIT}+)?|{DIGIT}+[eE][+-]?{DIGIT}+)
+
+\\ Todo string, cualquier caracter que se encuentre entre comillas
+STR \"[^\"]*\"
+
+\\ Algunas palabras reservadas para tipos
+RESERVED_TYPE (INTEGER|BOOLEAN|STRING)
+
+\\ Los comentarios, estos comienzan con doble guion medio
+COMMENT \-{2}.*
+
+\\ Ignorar espacios y saltos de linea
+[ \t\n\r]+ 
+
+\\ El punto es para lo no reconocido por el resto de expresiones
+.
+\end{lstlisting}
+
+\vspace{4mm}
+\section{Diseño del analizador sintáctico}
+\vspace{4mm}
+El analizador con Bison (\textbf{parser.y}), es el que verifica que la secuencia de 
+tokens cumpla con la gramática definida para el subconjunto de Eiffel. En lugar de 
+ejecutar el código inmediatamente, las acciones semánticas de Bison construyen nodos 
+de un árbol (AST).
+
+\vspace{4mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+PROGRAM
+    : CLASS_DEF
+    ;
+
+CLASS_DEF
+    : CLASS IDENTIFIER FEATURE_LIST END
+    ;
+
+FEATURE_LIST
+    : FEATURE_DEF FEATURE_LIST 
+    | FEATURE_DEF             
+    ;
+
+FEATURE_DEF
+    : FEATURE IDENTIFIER BLOCK
+    ;
+
+BLOCK
+    : LOCAL_DECL DO STATEMENT_LIST END 
+    | DO STATEMENT_LIST END            
+    ;
+
+LOCAL_DECL
+    : LOCAL VAR_DECL 
+    ;
+
+VAR_DECL
+    : MULT_ID COLON RESERVED_TYPE
+    ;
+
+MULT_ID
+    : MULT_ID COMMA ID  
+    | ID                 
+    ;
+
+STATEMENT_LIST
+    : STATEMENT STATEMENT_LIST  
+    | STATEMENT                
+    ;
+
+STATEMENT
+    : IDENTIFIER ASSIGN EXPR 
+    | PRINT PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE 
+    | IF EXPR THEN STATEMENT_LIST ELSE STATEMENT_LIST END 
+    | FROM STATEMENT_LIST UNTIL EXPR LOOP STATEMENT_LIST END 
+    ;
+
+EXPR
+    : EXPR PLUS EXPR          
+    | EXPR MINUS EXPR         
+    | EXPR TIMES EXPR         
+    | EXPR DIVIDE EXPR        
+    | EXPR EQUAL EXPR         
+    | EXPR NOT_EQUAL EXPR     
+    | EXPR LESS EXPR          
+    | EXPR GREATER EXPR       
+    | EXPR LESS_EQUAL EXPR    
+    | EXPR GREATER_EQUAL EXPR 
+    | EXPR AND EXPR           
+    | EXPR OR EXPR            
+    | NOT EXPR                
+    | FACTOR                  
+    ;
+
+FACTOR
+    : NUMBER  
+    | STRING  
+    | REAL    
+    | TRUE    
+    | FALSE   
+    | ID      
+    | PARENTHESIS_OPEN EXPR PARENTHESIS_CLOSE 
+    ;
+
+ID
+    : IDENTIFIER
+    ;
+
+\end{lstlisting}
+
+\vspace{6mm}
+\section{Estructura del AST}
+\vspace{4mm}
+Se diseñó un AST genérico utilizando struct AST en C (ast.c, ast.h), lo que permite una gestión uniforme de todos
+los elementos del lenguaje. Para manejar la variedad de tipos de datos de Eiffel (INTEGER, REAL, STRING) con una
+única estructura de nodo, se empleó una union dentro de struct, mientras campo kind determina qué miembro de la
+union debe ser accedido por el intérprete.
+
+\vspace{4mm}
+\begin{lstlisting}[style=CStyle]
+typedef struct AST {
+    NodeKind kind;
+    char *name;
+    struct AST *left;
+    struct AST *right;
+    union {
+        long ival;
+        double rval;
+        char *sval;
+        int bval;
+    } value;
+} AST;
+\end{lstlisting}
+
+\vspace{4mm}
+\noindent
+Se definió un conjunto de tipos de nodo que reflejan la estructura del subconjunto de Eiffel, no en su totalidad,
+pero si cubriendo lo básico y funcional.
+\vspace{4mm}
+
+\begin{lstlisting}[style=CStyle]
+typedef enum {
+    N_PROGRAM,
+    N_CLASS,
+    N_FEATURE,
+    N_BLOCK,
+    N_VARDECL,
+    N_SEQ,
+    N_INT,
+    N_REAL,
+    N_STRING,
+    N_BOOL,
+    N_VAR,
+    N_ASSIGN,
+    N_BINOP,
+    N_UNARYOP,
+    N_IF,
+    N_IF_BLOCK,
+    N_COND,
+    N_LOOP,
+    N_INIT,
+    N_BODY,
+    N_UNTIL,
+    N_PRINT,
+    N_NOOP
+} NodeKind;
+\end{lstlisting}
+
+
+\vspace{6mm}
+\section{Gestión de entornos y tabla de símbolos}
+\vspace{4mm}
+
+La gestión correcta del ámbito léxico (scoping) es crucial para variables locales. Esto se implementó mediante
+una \textbf{tabla de símbolos} basada en \textbf{entornos enlazados} (\textbf{symtab.c, symtab.h}).
+
+\vspace{2mm}
+\noindent
+El sistema se basa en tres estructuras clave:
+
+\vspace{2mm}
+\noindent
+\textbf{- Value:} Define los tipos de datos en tiempo de ejecución (\textit{INT}, \textit{BOOL}, etc.) y utiliza una
+\textit{union} para almacenar el dato real, asegurando un manejo tipado y eficiente de la memoria.
+
+\begin{lstlisting}[style=CStyle]
+    typedef struct {
+        ValueType type;
+        union {
+            int int_val;       
+            int bool_val;      
+            char char_val;     
+            char* str_val;     
+        } value;
+    } Value;
+\end{lstlisting}
+
+\vspace{2mm}
+\noindent
+\textbf{- Map:} Es un nodo de una lista enlazada que almacena una variable dentro de un entorno específico.
+
+\begin{lstlisting}[style=CStyle]
+typedef struct Map {
+    char* key;              // Nombre de la variable (identificador)
+    Value value;            // Valor de la variable
+    struct Map* next;
+} Map;
+\end{lstlisting}
+
+\vspace{2mm}
+\noindent
+\textbf{- Environment:} Representa un scope o ámbito léxico. Contiene la tabla de símbolos local (variables) y un puntero a su 
+ámbito contenedor (parent).
+
+\begin{lstlisting}[style=CStyle]
+typedef struct Environment {
+    Map* variables;              // Lista de variables locales (Tabla de Simbolos)
+    struct Environment* parent;  // Puntero al entorno padre (ambito exterior)
+} Environment;
+\end{lstlisting}
+
+\vspace{2mm}
+\noindent
+La distinción entre cómo se busca una variable para declararla versus cómo se busca para 
+usarla es fundamental para evitar errores semánticos como la re-declaración o 
+el acceso a variables inexistentes.
+
+\vspace{2mm}
+\noindent
+La declaración (\textit{env\_add\_variable}) utiliza una búsqueda local, solo se busca en el entorno actual. 
+Si la variable ya existe, se considera un error de re-declaración.
+
+\vspace{2mm}
+\noindent
+El uso/asignación (\textit{env\_lookup\_variable}), una búsqueda recursiva (ámbito léxico), se busca primero
+en el entorno actual. Si no se encuentra, la búsqueda se delega recursivamente al parent environment,
+siguiendo la cadena de ámbitos hasta la raíz global.
+
+\vspace{2mm}
+\noindent
+La actualización (\textit{env\_update\_variable}) también utiliza la misma lógica de búsqueda recursiva de 
+\textit{env\_lookup\_variable} para garantizar que solo se actualice una variable que ya haya sido previamente 
+declarada en algún ámbito accesible.
+
+\vspace{2mm}
+\noindent
+Este diseño asegura que el intérprete respeta el principio de localidad de Eiffel: las variables declaradas
+dentro de un bloque (local) son accesibles por el código de ese mismo y cualquier bloque hijo, pero no
+por el ámbito padre.
+
+
+\vspace{6mm}
+\section{Intérprete}
+\vspace{4mm}
+
+El intérprete se implementa en el archivo \textbf{interpreter.c} mediante la función principal
+\textit{Value evaluate\_ast(AST \*node, Environment \*env)}, la cual ejecuta un recorrido recursivo en
+profundidad sobre el AST, evaluando las expresiones y ejecutando las sentencias en el contexto del
+entorno de variables actual.
+
+\vspace{4mm}
+\noindent
+\textbf{- Recorrido y control de secuencia:} 
+\noindent
+Los nodos contenedores (como \textit{N\_PROGRAM}, \textit{N\_FEATURE}, \textit{N\_BLOCK}) y el nodo de
+secuencia \textit{N\_SEQ} siguen un patrón de recorrido simple:
+
+\vspace{2mm}
+\begin{lstlisting}[style=CStyle]
+evaluate_ast(node->left, env);
+if (node->right)
+    evaluate_ast(node->right, env);
+\end{lstlisting}
+
+\vspace{2mm}
+\noindent
+Este patrón asegura que el código se ejecuta de forma secuencial de izquierda a derecha, simulando la
+ejecución lineal del código fuente.
+
+\vspace{2mm}
+\noindent
+\textbf{- Declaración de variables anidadas:} 
+\noindent
+Para manejar declaraciones múltiples (\textit{N\_VARDECL}) como \textit{x, y, z: INTEGER}, la función
+\textit{declare\_var\_list} se utiliza como un helper estático.
+
+\vspace{2mm}
+\noindent
+\textit{Hay que marcar como importante, que en esta version en el scope de local solo se puede declarar 
+una sola seguidilla de variables con un solo tipo.}
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+class MAIN
+feature
+    make
+        local
+            x, y: INTEGER // Permitido
+        do
+            // ...
+        end
+end
+
+
+class MAIN
+feature
+    make
+        local
+            x, y: INTEGER 
+            z: BOOLEAN // No permitido
+        do
+            // ...
+        end
+end
+\end{lstlisting}
+
+\vspace{4mm}
+\noindent
+\textbf{- Control de flujo:} 
+\noindent
+La estructura de bucle LOOP de Eiffel (from...until...loop...end) se implementa siguiendo su semántica
+específica: Se ejecuta la expresión de inicialización (\textit{N\_INIT}), la condición de salida
+(\textit{N\_UNTIL}) se evalúa antes de cada iteración del cuerpo.
+
+\newpage
+\vspace{4mm}
+\noindent
+\textbf{- Errores semánticos en tiempo de ejecución:} 
+\noindent
+La seguridad del intérprete está garantizada por comprobaciones en tiempo de ejecución. Estas verificaciones
+se realizan utilizando el contador de línea (\textit{extern int yylineno}) para proveer mensajes de error legibles
+y localizados.
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+if (existing == NULL) {
+    fprintf(stderr, "\n Runtime/Semantic error: variable '%s' not declared (line %d)\n", ...);
+    exit(1);
+}
+\end{lstlisting}
+
+\vspace{6mm}
+\section{Decisiones de diseño y limitaciones}
+\vspace{4mm}
+La elección de la opción A (intérprete directo) fue una decisión estratégica basada en la complejidad del proyecto, 
+el tiempo disponible y la necesidad de priorizar la correcta implementación del ámbito léxico y
+las estructuras de control, ademas de ya tener algunas tecnologías conocidas de la primer entrega (Flex y Bison).
+
+\vspace{2mm}
+\noindent
+\textbf{- Mapeo directo entre sintaxis y semántica (transparencia):} 
+\noindent
+En un intérprete de AST, la ejecución es un recorrido directo sobre el árbol generado por Bison. Esto significa
+que si el AST representa correctamente una sentencia (\textit{N\_ASSIGN}, \textit{N\_LOOP}), su ejecución semántica 
+es inmediata y fácil de trazar. Durante el desarrollo, al encontrar un error (ej. una asignación incorrecta),
+podemos debuguear el intérprete simplemente inspeccionando el nodo AST fallido, sin tener que preocuparnos por una
+capa intermedia de Bytecode.
+
+\vspace{2mm}
+\noindent
+\textbf{- Facilidad en la gestión de memoria (variables):} 
+\noindent
+Nuestra implementación de entornos enlazados (\textit{struct Environment}) se integra de manera natural con el recorrido
+recursivo del AST. Cuando se entra a un nuevo bloque de código (ej. un \textit{N\_BLOCK} o \textit{N\_FEATURE}), 
+se crea un nuevo entorno que apunta al padre. Al salir de la función \textit{evaluate\_ast} para ese bloque, el 
+sistema de memoria de C (la pila de llamadas) se encarga de manera implícita de manejar el retorno, y solo necesitamos
+liberar explícitamente la memoria del entorno que creamos (\textit{env\_free}).
+
+\vspace{2mm}
+\noindent
+En resumen, la ppción A nos permitió enfocarnos en la semántica del lenguaje y la gestión de ámbitos, utilizando 
+la recursión de C como el motor de ejecución, minimizando la sobrecarga de generar Bytecode e implementar una
+máquina virtual desde cero.
+
+
+\newpage
+\section{Compilación y ejecución}
+\vspace{4mm}
+El proyecto incluye un Makefile automatizado para facilitar la compilación y las pruebas.
+
+\vspace{2mm}
+\noindent
+Requisitos:
+\begin{itemize}
+    \item GCC (Compilador de C)
+    \item Flex (Analizador léxico)
+    \item Bison (Analizador sintáctico)
+    \item Make
+\end{itemize}
+
+\vspace{2mm}
+\noindent
+Comandos
+
+\vspace{2mm}
+\noindent
+\textbf{- Compilar todo:} \\
+\noindent
+Esto genera los archivos \textbf{lex.yy.c}, \textbf{parser.tab.c} y compila el ejecutable executable.
+\begin{lstlisting}[style=DOS]
+username:path$  make build
+\end{lstlisting}
+
+
+\vspace{2mm}
+\noindent
+\textbf{- Ejecutar un archivo específico:} 
+\begin{lstlisting}[style=DOS]
+username:path$  make run FILE=examples/01_hello.e
+\end{lstlisting}
+
+
+\vspace{2mm}
+\noindent
+\textbf{- Correr pruebas:}\\
+\noindent
+Este comando busca automáticamente todos los archivos \textbf{.e} en la carpeta \textbf{examples/} y los ejecuta 
+secuencialmente, mostrando los resultados en consola.
+\begin{lstlisting}[style=DOS]
+username:path$  make test
+\end{lstlisting}
+
+
+\vspace{2mm}
+\noindent
+\textbf{- Limpiar:} 
+\noindent
+\begin{lstlisting}[style=DOS]
+username:path$  make clean
+\end{lstlisting}
+
+
+\vspace{6mm}
+\section{Conclusion}
+\vspace{4mm}
+
+Se ha logrado implementar un intérprete funcional para un subconjunto significativo de Eiffel. El sistema es capaz de 
+realizar operaciones de entrada/salida, aritmética compleja, manejo de lógica booleana y estructuras de control
+de flujo. Creemos que la implementación esta completamente abierta a modificaciones para crecer significativamente
+rápido y fácil.
+
+
+\newpage
+\section{Reseña del lenguaje Eiffel y su origen}
+\vspace{4mm}
+
+\vspace{4mm}
+\noindent
+\textbf{Lenguaje Eiffel}
+
+\vspace{2mm}
+\noindent
+Eiffel es un lenguaje de programación orientado a objetos, creado a mediados de
+los años 80 por \textbf{Bertrand Meyer}, un informático francés, mientras
+trabajaba en la empresa \textit{Interactive Software Engineering} (ISE).
+
+\noindent
+Su diseño está fuertemente ligado al ámbito académico, ya que Meyer era
+profesor e
+investigador y buscaba un lenguaje que sirviera como vehículo académico para
+difundir y aplicar los principios de \textit{programación por contrato}
+(\textit{Design by Contract}), una metodología introducida por Meyer que
+establece que cada componente de software debe definirse con
+\textbf{precondiciones, postcondiciones e invariantes}. Esto promueve la
+confiabilidad, reutilización y mantenibilidad del código.
+
+\noindent
+El nombre Eiffel hace referencia a la \textit{torre Eiffel} en París, símbolo
+de ingeniería sólida y elegante, lo cual refleja el espíritu con el que fue
+concebido: construir sistemas de software tan robustos y bien diseñados como
+una obra de ingeniería.
+
+\vspace{4mm}
+\noindent
+\textbf{Principios fundamentales}
+
+\begin{itemize}
+    \item \textbf{Orientación a objetos pura}: todo en Eiffel es objeto,
+          incluso los tipos básicos.
+    \item \textbf{Diseño por contrato (Design by Contract, DbC)}:
+          \begin{itemize}
+              \item Una de sus mayores innovaciones.
+              \item Cada clase, método o módulo se especifica con
+                    precondiciones,
+                    postcondiciones e invariantes, como un contrato formal
+                    entre el código y sus
+                    usuarios.
+              \item Esto fomenta la confiabilidad y la verificación del
+                    software.
+          \end{itemize}
+    \item \textbf{Simplicidad y legibilidad}: la sintaxis busca ser clara y
+          cercana al lenguaje natural.
+    \item \textbf{Soporte de herencia múltiple y polimorfismo}.
+\end{itemize}
+
+\vspace{4mm}
+\noindent
+\textbf{Origen universitario}
+
+\vspace{2mm}
+\noindent
+Bertrand Meyer desarrolló Eiffel inicialmente en el IT Department de
+\textit{Interactive Software Engineering} (hoy Eiffel Software), pero el
+lenguaje alcanzó su madurez y estandarización en el ámbito universitario, sobre
+todo en el \textbf{ETH Zürich} (Escuela Politécnica Federal de Zúrich, Suiza),
+donde Meyer ejerció como profesor de informática desde los años 90.
+
+\noindent
+Desde entonces, Eiffel ha sido un lenguaje estrechamente ligado a la academia,
+aunque también tuvo aplicaciones en la industria en sectores donde la
+confiabilidad del software es crítica (banca, aeroespacial, defensa).
+
+\vspace{4mm}
+\noindent
+\textbf{Legado}
+
+\vspace{2mm}
+\noindent
+Aunque no alcanzó la popularidad masiva de Java o C++, Eiffel influyó
+enormemente en la evolución del software: el concepto de \textit{Design by
+    Contract} fue adoptado por otros lenguajes (Ada 2012, C\#, Java mediante
+librerías, Python mediante decoradores, etc.).
+
+\noindent
+Sigue siendo un referente en cursos universitarios de teoría de lenguajes y
+compiladores, justamente porque combina \textbf{rigor formal} con un
+\textbf{diseño práctico}.
+
+
+\section{Re-entrega}
+\vspace{4mm}
+
+\subsection{Comentarios}
+\vspace{2mm}
+
+Para lograr agregar esta funcionalidad de Eiffel al interprete, basto con lograr que el \textbf{lexer.l} identifique
+los comentarios y no genere ningún token. Ademas se borro del \textbf{parser.y} el token ya que no iba a ser consumido.
+
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+...
+
+{COMMENT}         { }   // <-- Identifica pero no genera token
+
+...
+\end{lstlisting}
+
+\subsection{Concatenación de strings}
+\vspace{2mm}
+
+Antes de los cambios el analizador léxico estaba obteniendo bien al operando '+', pero solo como la operación
+aritmética de suma, no funcionando correctamente cuando los operandos son de tipo \textit{STRING}.
+Para lograr que ademas de la operación aritmética logre la concatenación de strings se realizo un cambio sobre
+el interprete. Cuando la función \textbf{evaluate\_ast} identifica el nodo \textbf{N\_BINOP} en el AST para la
+operación/signo '+', se decide si realizar la suma o concatenación dependiendo del tipo de cada operando. 
+En caso de no tener tipos admisibles se lanza un error.
+
+\vspace{2mm}
+\begin{lstlisting}[style=CStyle]
+Value evaluate_ast(AST *node, Environment *env) {
+    //...
+    switch (node->kind) {
+        case N_BINOP: {
+            Value l = evaluate_ast(node->left, env);
+            Value r = evaluate_ast(node->right, env);
+            result.type = INT_T;
+            if (strcmp(node->name, "+") == 0){
+                if(l.type == INT_T && r.type == INT_T){
+                    result.value.int_val = l.value.int_val + r.value.int_val;
+                }else if (l.type == STR_T && r.type == STR_T){
+                    int str_len_l = strlen(l.value.str_val) > 1? strlen(l.value.str_val)-1 : 0;
+                    int str_len_r = strlen(r.value.str_val) > 1? strlen(r.value.str_val)-1 : 0;
+                    int str_len = str_len_l + str_len_r;
+                    char *str = (char *)malloc(str_len + 1);
+                    strncpy(str, l.value.str_val, str_len_l);
+                    strncat(str, r.value.str_val +1, str_len_r);
+                    result.type = STR_T;
+                    result.value.str_val = str;
+                }else{
+                    throw_error_types(l.type, r.type);
+                }
+            }
+        }
+        // Other cases...
+    }
+    //...
+}
+\end{lstlisting}
+
+\subsection{Multiples lineas de declaración de variables}
+\vspace{2mm}
+Al realizar la declaración de variables antes solo se permitía una linea y un tipo solo.
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+class MAIN
+feature
+    make
+        local
+            a, b, c: INTEGER
+        do
+            ...
+        end
+end
+\end{lstlisting}
+\vspace{2mm}
+
+\noindent
+El cambio actual permite multiples lineas cada una con sus tipos particulares.
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+class MAIN
+feature
+    make
+        local
+            a, b, c: INTEGER
+            bool: BOOLEAN
+            x: INTEGER
+        do
+            ...
+        end
+end
+\end{lstlisting}
+\vspace{2mm}
+
+\noindent
+Esto se logró sumando producciones que contemplan multiples declaraciones.
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+LOCAL_DECL
+    : LOCAL VAR_DECL_LIST { $$ = $2; }
+    ;
+
+VAR_DECL_LIST
+    : VAR_DECL VAR_DECL_LIST { $$ = ast_new_node(N_SEQ, "VAR_DECL_LIST", $1, $2); }
+    | VAR_DECL               { $$ = $1; }
+    ;
+\end{lstlisting}
+
+
+\subsection{Números negativos}
+\vspace{2mm}
+Se agregó en el \textbf{lexer.l} la obtención del token para números negativos.
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+...
+NEG_NUMBER \-{1}{NUMBER}
+...
+
+{NEG_NUMBER}   {yylval.str = strdup(yytext); yycolumn += yyleng; return NEG_NUMBER; }
+
+...
+\end{lstlisting}
+
+\newpage
+\noindent
+Y también su lectura en el \textbf{parser.y} para crear el nodo \textbf{INTEGER} correspondiente,
+pero con un valor negativo.
+
+\vspace{2mm}
+\begin{lstlisting}[language=Eiffel, style=myeiffel]
+FACTOR
+    : NUMBER        { $$ = ast_new_int(atol($1)); }
+    | NEG_NUMBER    { $$ = ast_new_int(atol($1)); }
+
+    ...
+\end{lstlisting}
+
+\subsection{Conclusión de re-entrega}
+\vspace{2mm}
+
+Con pequeños cambios y agregado de funcionalidades no tan complejas, el interprete se ha vuelto un poco más robusto
+frente a distintas pruebas. \\
+
+\noindent
+Se agregan nuevos test: \\
+\hspace{4mm}\textbf{11\_comments.e}, \textbf{12\_concat\_strings.e}, \textbf{13\_multi\_decl\_vars.e}, \textbf{14\_negative\_numbers.e}
+
+
+\end{document}

@@ -9,25 +9,33 @@
 extern int yylineno;
 extern AST *root;
 
-static void declare_var_list(AST *list_node, Environment *env) {
+static Value create_value_to_type(char* type){
+    Value initial_val;
+    char *string = "STRING";
+    char *bool = "BOOLEAN";
+    if(strcmp(type, string) == 0){
+        char *val = "''";
+        initial_val = (Value){ .type = STR_T, .value.str_val = val};
+    } else if(strcmp(type, bool) == 0){
+        initial_val = (Value){ .type = BOOL_T, .value.bool_val = 0 };
+    } else {
+        initial_val = (Value){ .type = INT_T, .value.int_val = 0 };
+    }
+    return initial_val;
+}
+
+static void declare_var_list(AST *list_node, AST *type_node, Environment *env) {
     if (!list_node) return;
 
     if (list_node->kind == N_SEQ) {
-        declare_var_list(list_node->left, env);
-        declare_var_list(list_node->right, env);
-
+        declare_var_list(list_node->left, type_node, env);
+        declare_var_list(list_node->right, type_node, env);
     } else if (list_node->kind == N_VAR) {
-        const char *var_name = list_node->value.sval;
-        
-        if (env_lookup_variable(env, var_name) != NULL) {
-             fprintf(stderr, "\n Runtime/Semantic error: The variable '%s' is already declared in this scope (line %d)\n", var_name, yylineno);
+        if (env_lookup_variable(env,  list_node->value.sval) != NULL) {
+             fprintf(stderr, "\n Runtime/Semantic error: The variable '%s' is already declared in this scope (line %d)\n", list_node->value.sval, yylineno);
              exit(1);
         }
-        
-        Value initial_val = (Value){ .type = INT_T, .value.int_val = 0 };
-
-        env_add_variable(env, var_name, initial_val);
-
+        env_add_variable(env, list_node->value.sval, create_value_to_type(type_node->value.sval));
     } else {
         fprintf(stderr, "\n Runtime/Semantic error: N_VARDECL found an unexpected node of type %d in the list\n", list_node->kind);
         exit(1);
@@ -55,9 +63,17 @@ Value evaluate_ast(AST *node, Environment *env) {
         }
 
         case N_VARDECL: {
-            declare_var_list(node->left, env);
+            if(node->left->kind == N_VAR){
+                if (env_lookup_variable(env,  node->left->value.sval) != NULL) {
+                    fprintf(stderr, "\n Runtime/Semantic error: The variable '%s' is already declared in this scope (line %d)\n",  node->left->value.sval, yylineno);
+                    exit(1);
+                }
+                env_add_variable(env, node->left->value.sval, create_value_to_type(node->right->value.sval));
+            } else if(node->left->kind == N_SEQ){
+                declare_var_list(node->left, node->right, env);
+            }
             
-            Value v = { .type = INT_T, .value.int_val = 0 };
+            Value v = { .type = INT_T, .value.int_val = 0 }; // Default value
             return v;
         }
 

@@ -4,14 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum { INT_T, BOOL_T, CHAR_T, STR_T } ValueType;
+typedef enum { INT_T, BOOL_T, STR_T } ValueType;
 
 typedef struct {
     ValueType type;
     union {
         int int_val;       
-        int bool_val;      
-        char char_val;     
+        int bool_val;  
         char* str_val;     
     } value;
 } Value;

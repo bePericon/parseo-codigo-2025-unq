@@ -1,8 +1,8 @@
 ======================================================
--> INICIANDO PRUEBAS EN CARPETA salidas
+-> INICIANDO PRUEBAS EN CARPETA examples
 ======================================================
 ------------------------------------------------------
-EJECUTANDO: salidas/00_test_default.e
+EJECUTANDO: examples/00_test_default.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -52,7 +52,7 @@ print(value) => { Tipo: INT, Valor: 30 }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/01_hello.e
+EJECUTANDO: examples/01_hello.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -79,7 +79,7 @@ print(value) => { Tipo: STR, Valor: "Hola, mundo Eiffel!" }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/02_arit.e
+EJECUTANDO: examples/02_arit.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -110,7 +110,7 @@ print(value) => { Tipo: INT, Valor: 7 }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/03_vars.e
+EJECUTANDO: examples/03_vars.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -153,7 +153,7 @@ print(value) => { Tipo: INT, Valor: 15 }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/04_if_else.e
+EJECUTANDO: examples/04_if_else.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -197,7 +197,7 @@ print(value) => { Tipo: STR, Valor: "positivo" }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/05_loop_until.e
+EJECUTANDO: examples/05_loop_until.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -250,7 +250,7 @@ print(value) => { Tipo: INT, Valor: 2 }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/06_fib_iter.e
+EJECUTANDO: examples/06_fib_iter.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -340,13 +340,13 @@ print(value) => { Tipo: INT, Valor: 5 }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/07_fact_rec (extra).e
+EJECUTANDO: examples/07_fact_rec.e
 === Análisis lexico y sintactico ===
 
  Syntax error: unexpected token '(' (line 5, column 16)
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/08_strings (extra).e
+EJECUTANDO: examples/08_strings.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -373,8 +373,8 @@ Análisis sintáctico exitoso.
 ===========
 
 === Ejecucion ===
-print(value) => { Tipo: INT, Valor: 2060254752 }
-print(value) => { Tipo: INT, Valor: 942898720 }
+print(value) => { Tipo: STR, Valor: "Hola mundo" }
+print(value) => { Tipo: STR, Valor: "número:  42" }
 
 === Estado final del entorno ===
 
@@ -383,13 +383,13 @@ print(value) => { Tipo: INT, Valor: 942898720 }
 =========================
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/09_class_attr (extra).e
+EJECUTANDO: examples/09_class_attr.e
 === Análisis lexico y sintactico ===
 
  Syntax error: unexpected token ':' (line 5, column 11)
 ------------------------------------------------------
 ------------------------------------------------------
-EJECUTANDO: salidas/10_errors.e
+EJECUTANDO: examples/10_errors.e
 === Análisis lexico y sintactico ===
 
  Árbol sintáctico construido con éxito.
@@ -410,11 +410,260 @@ Análisis sintáctico exitoso.
 === Ejecucion ===
 
  Runtime/Semantic error: variable 'x' not declared (line 13)
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: examples/11_comments.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> VAR DECL
+        -> SEQUENCE
+          -> SEQUENCE
+            -> VAR: a
+            -> VAR: b
+          -> VAR: c
+        -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: a
+          -> INT: 10
+        -> SEQUENCE
+          -> ASSIGN (:=)
+            -> VAR: b
+            -> INT: 20
+          -> SEQUENCE
+            -> ASSIGN (:=)
+              -> VAR: c
+              -> BINOP (+)
+                -> VAR: a
+                -> VAR: b
+            -> PRINT
+              -> VAR: c
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 30 }
 
 === Estado final del entorno ===
 
 === ENTORNO #0 (Local) ===
-  (Este entorno está vacío)
+  Clave: c -> { Tipo: INT, Valor: 30 }
+  Clave: b -> { Tipo: INT, Valor: 20 }
+  Clave: a -> { Tipo: INT, Valor: 10 }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: examples/12_concat_strings.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> VAR DECL
+        -> SEQUENCE
+          -> VAR: str
+          -> VAR: exclamationmark
+        -> VAR: STRING
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: str
+          -> STRING: " cruel"
+        -> SEQUENCE
+          -> ASSIGN (:=)
+            -> VAR: exclamationmark
+            -> STRING: "!"
+          -> PRINT
+            -> BINOP (+)
+              -> BINOP (+)
+                -> BINOP (+)
+                  -> BINOP (+)
+                    -> STRING: "Adios "
+                    -> STRING: "mundo"
+                  -> STRING: "   ..."
+                -> VAR: str
+              -> VAR: exclamationmark
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: STR, Valor: "Adios mundo   ... cruel!" }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: exclamationmark -> { Tipo: STR, Valor: "!" }
+  Clave: str -> { Tipo: STR, Valor: " cruel" }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: examples/13_multi_decl_vars.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> SEQUENCE
+        -> VAR DECL
+          -> VAR: str
+          -> VAR: STRING
+        -> SEQUENCE
+          -> VAR DECL
+            -> SEQUENCE
+              -> VAR: a
+              -> VAR: b
+            -> VAR: INTEGER
+          -> SEQUENCE
+            -> VAR DECL
+              -> VAR: bool
+              -> VAR: BOOLEAN
+            -> VAR DECL
+              -> VAR: c
+              -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: str
+          -> STRING: "El resultado es: "
+        -> SEQUENCE
+          -> ASSIGN (:=)
+            -> VAR: c
+            -> INT: 10
+          -> SEQUENCE
+            -> ASSIGN (:=)
+              -> VAR: b
+              -> INT: 200
+            -> SEQUENCE
+              -> ASSIGN (:=)
+                -> VAR: bool
+                -> BOOL: true
+              -> SEQUENCE
+                -> PRINT
+                  -> VAR: str
+                -> IF_BLOCK
+                  -> IF
+                    -> COND
+                      -> VAR: bool
+                    -> SEQUENCE
+                      -> SEQUENCE
+                        -> ASSIGN (:=)
+                          -> VAR: a
+                          -> BINOP (+)
+                            -> VAR: b
+                            -> VAR: c
+                        -> PRINT
+                          -> VAR: a
+                  -> SEQUENCE
+                    -> SEQUENCE
+                      -> ASSIGN (:=)
+                        -> VAR: a
+                        -> BINOP (+)
+                          -> VAR: b
+                          -> BINOP (*)
+                            -> INT: 2
+                            -> VAR: c
+                      -> PRINT
+                        -> VAR: a
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: STR, Valor: "El resultado es: " }
+print(value) => { Tipo: INT, Valor: 210 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: c -> { Tipo: INT, Valor: 10 }
+  Clave: bool -> { Tipo: BOOL, Valor: true }
+  Clave: b -> { Tipo: INT, Valor: 200 }
+  Clave: a -> { Tipo: INT, Valor: 210 }
+  Clave: str -> { Tipo: STR, Valor: "El resultado es: " }
+=========================
+------------------------------------------------------
+------------------------------------------------------
+EJECUTANDO: examples/14_negative_numbers.e
+=== Análisis lexico y sintactico ===
+
+ Árbol sintáctico construido con éxito.
+
+Análisis sintáctico exitoso.
+
+=== AST ===
+
+=== AST ===
+-> CLASS 
+  -> FEATURE
+    -> BLOCK
+      -> SEQUENCE
+        -> VAR DECL
+          -> SEQUENCE
+            -> VAR: positive
+            -> VAR: negative
+          -> VAR: INTEGER
+        -> VAR DECL
+          -> VAR: x
+          -> VAR: INTEGER
+      -> SEQUENCE
+        -> ASSIGN (:=)
+          -> VAR: positive
+          -> INT: 100
+        -> SEQUENCE
+          -> ASSIGN (:=)
+            -> VAR: negative
+            -> INT: -30
+          -> SEQUENCE
+            -> ASSIGN (:=)
+              -> VAR: x
+              -> INT: -25
+            -> SEQUENCE
+              -> PRINT
+                -> VAR: positive
+              -> SEQUENCE
+                -> PRINT
+                  -> VAR: negative
+                -> SEQUENCE
+                  -> PRINT
+                    -> BINOP (-)
+                      -> VAR: x
+                      -> VAR: negative
+                  -> PRINT
+                    -> BINOP (-)
+                      -> VAR: x
+                      -> VAR: positive
+===========
+
+=== Ejecucion ===
+print(value) => { Tipo: INT, Valor: 100 }
+print(value) => { Tipo: INT, Valor: -30 }
+print(value) => { Tipo: INT, Valor: 5 }
+print(value) => { Tipo: INT, Valor: -125 }
+
+=== Estado final del entorno ===
+
+=== ENTORNO #0 (Local) ===
+  Clave: x -> { Tipo: INT, Valor: -25 }
+  Clave: negative -> { Tipo: INT, Valor: -30 }
+  Clave: positive -> { Tipo: INT, Valor: 100 }
 =========================
 ------------------------------------------------------
 -> PRUEBAS COMPLETADAS.
